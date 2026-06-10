@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.12%2B-41BDF5.svg" alt="HA min version">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.1.1-blue.svg" alt="Version"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.1.2-blue.svg" alt="Version"></a>
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT">
 </p>
 
@@ -134,6 +134,11 @@ twice-daily** forecasts.
 - **Weather alert** — `on` when a government alert is active; the alert details
   (event, sender, start/end, description, tags) are in the entity attributes.
 - **Precipitation expected** — `on` when rain/snow is expected within the next hour.
+
+### Button
+
+- **Refresh** — forces an immediate OpenWeather update without waiting for the
+  refresh interval (always pressable, so it also works as a manual retry).
 
 ---
 

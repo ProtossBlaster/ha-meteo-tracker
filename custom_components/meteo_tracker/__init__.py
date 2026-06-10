@@ -27,6 +27,7 @@ PLATFORMS: list[Platform] = [
     Platform.WEATHER,
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
 ]
 
 MeteoTrackerConfigEntry = ConfigEntry[MeteoTrackerCoordinator]

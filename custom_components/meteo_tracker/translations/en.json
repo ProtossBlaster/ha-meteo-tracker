@@ -118,6 +118,9 @@
     "binary_sensor": {
       "weather_alert": { "name": "Weather alert" },
       "precipitation_expected": { "name": "Precipitation expected" }
+    },
+    "button": {
+      "refresh": { "name": "Refresh" }
     }
   }
 }

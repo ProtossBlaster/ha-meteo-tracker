@@ -10,6 +10,13 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-11
+
+### Added
+- **Refresh button** per tracked person (`button.<person>_refresh`): forces an
+  immediate OpenWeather update without waiting for the refresh interval. It is
+  always pressable, so it doubles as a manual retry when data is stale.
+
 ## [0.1.1] - 2026-06-11
 
 ### Added
@@ -46,6 +53,7 @@ Initial release. 🎉
 - **Diagnostics** download with the API key and exact coordinates redacted.
 - App **icon** and CI (HACS + hassfest + unit tests).
 
-[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.2
 [0.1.1]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.1
 [0.1.0]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.0

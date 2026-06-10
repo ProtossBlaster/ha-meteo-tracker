@@ -118,6 +118,9 @@
     "binary_sensor": {
       "weather_alert": { "name": "Allerta meteo" },
       "precipitation_expected": { "name": "Precipitazioni in arrivo" }
+    },
+    "button": {
+      "refresh": { "name": "Aggiorna" }
     }
   }
 }

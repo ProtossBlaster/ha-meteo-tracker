@@ -23,6 +23,7 @@ Domain: `meteo_tracker` · Backend: OpenWeather **One Call API 3.0** + **Air Pol
 | `weather.py` | `weather.<person>` entity: current props + hourly/daily/twice-daily forecasts. |
 | `sensor.py` | `SENSORS` descriptor table (40 sensors) + entity. Each has a `value_fn(tracker_data)`. |
 | `binary_sensor.py` | `BINARY_SENSORS` (weather alert, precipitation expected). |
+| `button.py` | Per-person **Refresh** button → `coordinator.async_request_refresh()`. Adding a platform also means editing `PLATFORMS` in `__init__.py`. |
 | `diagnostics.py` | Config-entry diagnostics; **redacts** api_key + coordinates. |
 | `strings.json` + `translations/{en,it}.json` | UI + entity names + enum state labels. `en.json` is a copy of `strings.json`. |
 | `brand/` | App icon/logo (256/512). Source for a future `home-assistant/brands` PR. |
