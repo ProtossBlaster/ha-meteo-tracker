@@ -22,7 +22,7 @@ from homeassistant.util import dt as dt_util
 
 from . import MeteoTrackerConfigEntry
 from .entity import MeteoTrackerEntity
-from .weather_codes import map_condition
+from .weather_codes import compact_summary, map_condition
 
 
 async def async_setup_entry(
@@ -163,7 +163,7 @@ class MeteoTrackerWeather(MeteoTrackerEntity, WeatherEntity):
         return {
             "detailed_description": description.capitalize() if description else None,
             "openweather_id": weather.get("id"),
-            "daily_summary": daily[0].get("summary") if daily else None,
+            "daily_summary": compact_summary(daily[0] if daily else None),
             "alert_active": bool(alerts),
             "alert": alerts[0].get("event") if alerts else None,
             "alert_count": len(alerts),

@@ -10,6 +10,15 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-06-11
+
+### Changed
+- **Daily summary is now localised.** OpenWeather's own `summary` text is
+  English-only, so the `daily_summary` weather attribute and the *Daily summary*
+  sensor are now composed from the (translated) day description + temperature
+  range + rain probability, using symbols — e.g. `Nubi sparse · 14–24° · 🌧️ 20%`.
+  Reads correctly in any language, with no extra API calls.
+
 ## [0.1.2] - 2026-06-11
 
 ### Added
@@ -53,7 +62,8 @@ Initial release. 🎉
 - **Diagnostics** download with the API key and exact coordinates redacted.
 - App **icon** and CI (HACS + hassfest + unit tests).
 
-[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.3
 [0.1.2]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.2
 [0.1.1]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.1
 [0.1.0]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.0

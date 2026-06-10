@@ -70,6 +70,27 @@ class TestAqiLabel:
         assert wc.aqi_label(None) is None
 
 
+class TestCompactSummary:
+    def test_full(self):
+        day = {
+            "weather": [{"description": "nubi sparse"}],
+            "temp": {"min": 14.2, "max": 23.8},
+            "pop": 0.2,
+        }
+        assert wc.compact_summary(day) == "Nubi sparse · 14–24° · 🌧️ 20%"
+
+    def test_dry_day_omits_rain(self):
+        day = {"weather": [{"description": "cielo sereno"}], "temp": {"min": 10, "max": 20}, "pop": 0}
+        assert wc.compact_summary(day) == "Cielo sereno · 10–20°"
+
+    def test_partial(self):
+        assert wc.compact_summary({"temp": {"min": 5, "max": 9}}) == "5–9°"
+
+    def test_empty(self):
+        assert wc.compact_summary(None) is None
+        assert wc.compact_summary({}) is None
+
+
 class TestMoonPhase:
     def test_principal_phases(self):
         assert wc.moon_phase_name(0) == "new_moon"

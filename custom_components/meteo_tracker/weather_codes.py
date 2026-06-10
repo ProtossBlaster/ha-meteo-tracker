@@ -130,6 +130,31 @@ def aqi_label(aqi: int | None) -> str | None:
     return _AQI_LABELS.get(int(aqi))
 
 
+def compact_summary(day: dict | None) -> str | None:
+    """Build a language-neutral compact daily summary from a ``daily[]`` entry.
+
+    OpenWeather's own ``summary`` text is English-only, but the per-day
+    ``weather[].description`` *is* translated by the ``lang`` parameter. So we
+    compose our own line from that localised description plus the temperature
+    range and rain probability, using symbols instead of words — it then reads
+    correctly in any language. Example: ``"Nubi sparse · 14–24° · 🌧️ 20%"``.
+    """
+    if not day:
+        return None
+    parts: list[str] = []
+    description = (day.get("weather") or [{}])[0].get("description")
+    if isinstance(description, str) and description:
+        parts.append(description.capitalize())
+    temp = day.get("temp") or {}
+    tmin, tmax = temp.get("min"), temp.get("max")
+    if tmin is not None and tmax is not None:
+        parts.append(f"{round(tmin)}–{round(tmax)}°")
+    pop = day.get("pop")
+    if pop:
+        parts.append(f"🌧️ {round(pop * 100)}%")
+    return " · ".join(parts) if parts else None
+
+
 # Eight named lunar phases keyed off OpenWeather ``moon_phase`` (0..1).
 def moon_phase_name(value: float | None) -> str | None:
     """Map an OpenWeather ``moon_phase`` (0=new, 0.5=full, 1=new) to a slug."""

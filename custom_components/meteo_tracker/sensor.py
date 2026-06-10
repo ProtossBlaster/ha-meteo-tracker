@@ -31,7 +31,13 @@ from homeassistant.util import dt as dt_util
 from . import MeteoTrackerConfigEntry
 from .entity import MeteoTrackerEntity
 from .weather import _precip
-from .weather_codes import aqi_label, map_condition, moon_phase_name, wind_cardinal
+from .weather_codes import (
+    aqi_label,
+    compact_summary,
+    map_condition,
+    moon_phase_name,
+    wind_cardinal,
+)
 
 MEASUREMENT = SensorStateClass.MEASUREMENT
 MICROGRAMS = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -268,7 +274,7 @@ SENSORS: tuple[MeteoSensorDescription, ...] = (
     MeteoSensorDescription(
         key="weather_summary",
         icon="mdi:text-long",
-        value_fn=lambda d: _today(d).get("summary"),
+        value_fn=lambda d: compact_summary(_today(d)),
     ),
     # --- sun & moon -------------------------------------------------------
     MeteoSensorDescription(
