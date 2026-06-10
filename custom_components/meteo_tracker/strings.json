@@ -1,0 +1,123 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Meteo Tracker",
+        "description": "Weather per person, based on each device tracker's live location, via OpenWeather One Call API 3.0.",
+        "data": {
+          "name": "Name",
+          "api_key": "OpenWeather API key",
+          "trackers": "People to follow (device trackers)",
+          "scan_interval_minutes": "Refresh interval (minutes)",
+          "language": "Language for weather descriptions"
+        },
+        "data_description": {
+          "api_key": "Create a free key at openweathermap.org and subscribe to 'One Call by Call' (1000 calls/day free with a spend limit).",
+          "trackers": "Each selected device tracker gets its own weather entity and sensor set, following that person's current location.",
+          "scan_interval_minutes": "5 minutes uses ~288 calls/day per distinct location. People standing together share a single call."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid API key.",
+      "cannot_connect": "Cannot reach OpenWeather. Check your internet connection.",
+      "rate_limited": "OpenWeather rejected the request: call limit reached.",
+      "no_trackers": "Select at least one device tracker."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Meteo Tracker options",
+        "data": {
+          "trackers": "People to follow (device trackers)",
+          "scan_interval_minutes": "Refresh interval (minutes)",
+          "language": "Language for weather descriptions"
+        },
+        "data_description": {
+          "scan_interval_minutes": "5 minutes uses ~288 calls/day per distinct location. People standing together share a single call."
+        }
+      }
+    },
+    "error": {
+      "no_trackers": "Select at least one device tracker."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": { "name": "Temperature" },
+      "apparent_temperature": { "name": "Apparent temperature" },
+      "temp_min_today": { "name": "Minimum temperature today" },
+      "temp_max_today": { "name": "Maximum temperature today" },
+      "pressure": { "name": "Pressure" },
+      "humidity": { "name": "Humidity" },
+      "dew_point": { "name": "Dew point" },
+      "uv_index": { "name": "UV index" },
+      "cloud_coverage": { "name": "Cloud coverage" },
+      "visibility": { "name": "Visibility" },
+      "wind_speed": { "name": "Wind speed" },
+      "wind_gust": { "name": "Wind gust" },
+      "wind_bearing": { "name": "Wind bearing" },
+      "wind_direction": {
+        "name": "Wind direction",
+        "state": {
+          "N": "North", "NNE": "North-northeast", "NE": "Northeast", "ENE": "East-northeast",
+          "E": "East", "ESE": "East-southeast", "SE": "Southeast", "SSE": "South-southeast",
+          "S": "South", "SSW": "South-southwest", "SW": "Southwest", "WSW": "West-southwest",
+          "W": "West", "WNW": "West-northwest", "NW": "Northwest", "NNW": "North-northwest"
+        }
+      },
+      "precipitation_1h": { "name": "Precipitation (last hour)" },
+      "precipitation_probability": { "name": "Precipitation probability" },
+      "precipitation_next_hour": { "name": "Precipitation next hour" },
+      "rain_today": { "name": "Rain today" },
+      "snow_today": { "name": "Snow today" },
+      "condition": { "name": "Condition" },
+      "weather_description": { "name": "Weather description" },
+      "weather_summary": { "name": "Daily summary" },
+      "sunrise": { "name": "Sunrise" },
+      "sunset": { "name": "Sunset" },
+      "moonrise": { "name": "Moonrise" },
+      "moonset": { "name": "Moonset" },
+      "moon_phase": {
+        "name": "Moon phase",
+        "state": {
+          "new_moon": "New moon",
+          "waxing_crescent": "Waxing crescent",
+          "first_quarter": "First quarter",
+          "waxing_gibbous": "Waxing gibbous",
+          "full_moon": "Full moon",
+          "waning_gibbous": "Waning gibbous",
+          "last_quarter": "Last quarter",
+          "waning_crescent": "Waning crescent"
+        }
+      },
+      "moon_phase_value": { "name": "Moon phase value" },
+      "air_quality_index": { "name": "Air quality index" },
+      "air_quality_label": {
+        "name": "Air quality",
+        "state": {
+          "good": "Good",
+          "fair": "Fair",
+          "moderate": "Moderate",
+          "poor": "Poor",
+          "very_poor": "Very poor"
+        }
+      },
+      "pm25": { "name": "PM2.5" },
+      "pm10": { "name": "PM10" },
+      "ozone": { "name": "Ozone" },
+      "nitrogen_dioxide": { "name": "Nitrogen dioxide" },
+      "sulphur_dioxide": { "name": "Sulphur dioxide" },
+      "carbon_monoxide": { "name": "Carbon monoxide" },
+      "nitrogen_monoxide": { "name": "Nitrogen monoxide" },
+      "ammonia": { "name": "Ammonia" },
+      "location": { "name": "Location" },
+      "last_measured": { "name": "Last measured" }
+    },
+    "binary_sensor": {
+      "weather_alert": { "name": "Weather alert" },
+      "precipitation_expected": { "name": "Precipitation expected" }
+    }
+  }
+}

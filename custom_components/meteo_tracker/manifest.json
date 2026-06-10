@@ -1,0 +1,13 @@
+{
+  "domain": "meteo_tracker",
+  "name": "Meteo Tracker (OpenWeather per-person)",
+  "after_dependencies": ["device_tracker", "zone"],
+  "codeowners": ["@ProtossBlaster"],
+  "config_flow": true,
+  "documentation": "https://github.com/ProtossBlaster/ha-meteo-tracker",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/ProtossBlaster/ha-meteo-tracker/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

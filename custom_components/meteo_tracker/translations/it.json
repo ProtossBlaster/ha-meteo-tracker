@@ -1,0 +1,123 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Meteo Tracker",
+        "description": "Meteo per persona, in base alla posizione in tempo reale di ciascun device tracker, tramite OpenWeather One Call API 3.0.",
+        "data": {
+          "name": "Nome",
+          "api_key": "Chiave API OpenWeather",
+          "trackers": "Persone da seguire (device tracker)",
+          "scan_interval_minutes": "Intervallo di aggiornamento (minuti)",
+          "language": "Lingua delle descrizioni meteo"
+        },
+        "data_description": {
+          "api_key": "Crea una chiave gratuita su openweathermap.org e attiva 'One Call by Call' (1000 chiamate/giorno gratis impostando un tetto di spesa).",
+          "trackers": "Ogni device tracker selezionato avrà una propria entità meteo e una serie di sensori, seguendo la posizione attuale di quella persona.",
+          "scan_interval_minutes": "5 minuti = ~288 chiamate/giorno per ogni posizione distinta. Persone nello stesso luogo condividono una sola chiamata."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Chiave API non valida.",
+      "cannot_connect": "Impossibile raggiungere OpenWeather. Controlla la connessione a internet.",
+      "rate_limited": "OpenWeather ha rifiutato la richiesta: limite di chiamate raggiunto.",
+      "no_trackers": "Seleziona almeno un device tracker."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni Meteo Tracker",
+        "data": {
+          "trackers": "Persone da seguire (device tracker)",
+          "scan_interval_minutes": "Intervallo di aggiornamento (minuti)",
+          "language": "Lingua delle descrizioni meteo"
+        },
+        "data_description": {
+          "scan_interval_minutes": "5 minuti = ~288 chiamate/giorno per ogni posizione distinta. Persone nello stesso luogo condividono una sola chiamata."
+        }
+      }
+    },
+    "error": {
+      "no_trackers": "Seleziona almeno un device tracker."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": { "name": "Temperatura" },
+      "apparent_temperature": { "name": "Temperatura percepita" },
+      "temp_min_today": { "name": "Temperatura minima oggi" },
+      "temp_max_today": { "name": "Temperatura massima oggi" },
+      "pressure": { "name": "Pressione" },
+      "humidity": { "name": "Umidità" },
+      "dew_point": { "name": "Punto di rugiada" },
+      "uv_index": { "name": "Indice UV" },
+      "cloud_coverage": { "name": "Copertura nuvolosa" },
+      "visibility": { "name": "Visibilità" },
+      "wind_speed": { "name": "Velocità del vento" },
+      "wind_gust": { "name": "Raffica di vento" },
+      "wind_bearing": { "name": "Direzione del vento (gradi)" },
+      "wind_direction": {
+        "name": "Direzione del vento",
+        "state": {
+          "N": "Nord", "NNE": "Nord-nordest", "NE": "Nordest", "ENE": "Est-nordest",
+          "E": "Est", "ESE": "Est-sudest", "SE": "Sudest", "SSE": "Sud-sudest",
+          "S": "Sud", "SSW": "Sud-sudovest", "SW": "Sudovest", "WSW": "Ovest-sudovest",
+          "W": "Ovest", "WNW": "Ovest-nordovest", "NW": "Nordovest", "NNW": "Nord-nordovest"
+        }
+      },
+      "precipitation_1h": { "name": "Precipitazioni (ultima ora)" },
+      "precipitation_probability": { "name": "Probabilità di precipitazioni" },
+      "precipitation_next_hour": { "name": "Precipitazioni prossima ora" },
+      "rain_today": { "name": "Pioggia oggi" },
+      "snow_today": { "name": "Neve oggi" },
+      "condition": { "name": "Condizione" },
+      "weather_description": { "name": "Descrizione meteo" },
+      "weather_summary": { "name": "Riepilogo giornaliero" },
+      "sunrise": { "name": "Alba" },
+      "sunset": { "name": "Tramonto" },
+      "moonrise": { "name": "Sorgere della luna" },
+      "moonset": { "name": "Tramonto della luna" },
+      "moon_phase": {
+        "name": "Fase lunare",
+        "state": {
+          "new_moon": "Luna nuova",
+          "waxing_crescent": "Luna crescente",
+          "first_quarter": "Primo quarto",
+          "waxing_gibbous": "Gibbosa crescente",
+          "full_moon": "Luna piena",
+          "waning_gibbous": "Gibbosa calante",
+          "last_quarter": "Ultimo quarto",
+          "waning_crescent": "Luna calante"
+        }
+      },
+      "moon_phase_value": { "name": "Valore fase lunare" },
+      "air_quality_index": { "name": "Indice qualità dell'aria" },
+      "air_quality_label": {
+        "name": "Qualità dell'aria",
+        "state": {
+          "good": "Buona",
+          "fair": "Discreta",
+          "moderate": "Moderata",
+          "poor": "Scarsa",
+          "very_poor": "Pessima"
+        }
+      },
+      "pm25": { "name": "PM2.5" },
+      "pm10": { "name": "PM10" },
+      "ozone": { "name": "Ozono" },
+      "nitrogen_dioxide": { "name": "Biossido di azoto" },
+      "sulphur_dioxide": { "name": "Biossido di zolfo" },
+      "carbon_monoxide": { "name": "Monossido di carbonio" },
+      "nitrogen_monoxide": { "name": "Monossido di azoto" },
+      "ammonia": { "name": "Ammoniaca" },
+      "location": { "name": "Posizione" },
+      "last_measured": { "name": "Ultima misurazione" }
+    },
+    "binary_sensor": {
+      "weather_alert": { "name": "Allerta meteo" },
+      "precipitation_expected": { "name": "Precipitazioni in arrivo" }
+    }
+  }
+}
