@@ -61,10 +61,10 @@
       "wind_direction": {
         "name": "Direzione del vento",
         "state": {
-          "N": "Nord", "NNE": "Nord-nordest", "NE": "Nordest", "ENE": "Est-nordest",
-          "E": "Est", "ESE": "Est-sudest", "SE": "Sudest", "SSE": "Sud-sudest",
-          "S": "Sud", "SSW": "Sud-sudovest", "SW": "Sudovest", "WSW": "Ovest-sudovest",
-          "W": "Ovest", "WNW": "Ovest-nordovest", "NW": "Nordovest", "NNW": "Nord-nordovest"
+          "n": "Nord", "nne": "Nord-nordest", "ne": "Nordest", "ene": "Est-nordest",
+          "e": "Est", "ese": "Est-sudest", "se": "Sudest", "sse": "Sud-sudest",
+          "s": "Sud", "ssw": "Sud-sudovest", "sw": "Sudovest", "wsw": "Ovest-sudovest",
+          "w": "Ovest", "wnw": "Ovest-nordovest", "nw": "Nordovest", "nnw": "Nord-nordovest"
         }
       },
       "precipitation_1h": { "name": "Precipitazioni (ultima ora)" },

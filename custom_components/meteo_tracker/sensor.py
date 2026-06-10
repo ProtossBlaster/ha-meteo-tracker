@@ -41,9 +41,10 @@ MOON_PHASES = [
     "full_moon", "waning_gibbous", "last_quarter", "waning_crescent",
 ]
 AQI_LABELS = ["good", "fair", "moderate", "poor", "very_poor"]
+# Lowercase slugs so they are valid Home Assistant enum/translation keys.
 COMPASS_POINTS = [
-    "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-    "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+    "n", "nne", "ne", "ene", "e", "ese", "se", "sse",
+    "s", "ssw", "sw", "wsw", "w", "wnw", "nw", "nnw",
 ]
 
 
@@ -102,6 +103,11 @@ def _description(d: dict) -> str | None:
     weather = (_cur(d).get("weather") or [{}])[0]
     desc = weather.get("description")
     return desc.capitalize() if isinstance(desc, str) else None
+
+
+def _wind_dir(d: dict) -> str | None:
+    cardinal = wind_cardinal(_cur(d).get("wind_deg"))
+    return cardinal.lower() if cardinal else None
 
 
 def _minutely_sum(d: dict) -> float | None:
@@ -213,7 +219,7 @@ SENSORS: tuple[MeteoSensorDescription, ...] = (
         icon="mdi:compass-outline",
         device_class=SensorDeviceClass.ENUM,
         options=COMPASS_POINTS,
-        value_fn=lambda d: wind_cardinal(_cur(d).get("wind_deg")),
+        value_fn=_wind_dir,
     ),
     MeteoSensorDescription(
         key="precipitation_1h",

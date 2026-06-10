@@ -16,6 +16,10 @@ jobs:
         uses: hacs/action@main
         with:
           category: integration
+          # The meteo_tracker domain is not (yet) in the home-assistant/brands
+          # repository, which the brands check requires. Skip it until a brands
+          # PR is merged. All other HACS checks must pass.
+          ignore: brands
 
   hassfest:
     name: Hassfest
