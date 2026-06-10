@@ -1,8 +1,15 @@
-# 🌦️ Meteo Tracker — per-person weather for Home Assistant
+<p align="center">
+  <img src="images/icon.png" width="120" alt="Meteo Tracker" />
+</p>
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-![HA min version](https://img.shields.io/badge/Home%20Assistant-2024.12%2B-41BDF5.svg)
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+<h1 align="center">🌦️ Meteo Tracker — per-person weather for Home Assistant</h1>
+
+<p align="center">
+  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
+  <img src="https://img.shields.io/badge/Home%20Assistant-2024.12%2B-41BDF5.svg" alt="HA min version">
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg" alt="Version"></a>
+  <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT">
+</p>
 
 A **complete, professional** weather integration that gives **each person their own
 weather**, based on where they actually are. You pick one or more `device_tracker`
