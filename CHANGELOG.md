@@ -10,6 +10,16 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-11
+
+### Added
+- The `weather` entity now exposes OpenWeather's precise, **localised description**
+  as state attributes — the fine wording HA's 15-state `condition` cannot hold:
+  - `detailed_description` (e.g. *"Temporale con pioggia forte"*),
+  - `daily_summary` (human-readable day summary),
+  - `alert`, `alert_active`, `alert_count` (active government weather alert),
+  - `openweather_id` (raw OpenWeather condition code, for templating).
+
 ## [0.1.0] - 2026-06-11
 
 Initial release. 🎉
@@ -36,5 +46,6 @@ Initial release. 🎉
 - **Diagnostics** download with the API key and exact coordinates redacted.
 - App **icon** and CI (HACS + hassfest + unit tests).
 
-[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.1
 [0.1.0]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.0

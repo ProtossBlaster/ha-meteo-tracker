@@ -110,9 +110,9 @@ CI runs the same spirit on every push: **HACS + hassfest + pytest**
 
 ## 6. Backlog / ideas
 
-- [ ] **v0.1.1** — expose the detailed OpenWeather description (Italian) + active alert
-      as `extra_state_attributes` on the `weather` entity (so the fine wording shows
-      where users look, despite the 15-state `condition` limit).
+- [x] **v0.1.1** — detailed OpenWeather description + daily summary + active alert
+      exposed as `extra_state_attributes` on the `weather` entity (the fine wording
+      the 15-state `condition` can't hold). _Shipped 2026-06-11._
 - [ ] `home-assistant/brands` PR (assets ready in `brand/`) → icon shows in HA, drop
       `ignore: brands`. **External public PR — needs Silvio's explicit OK.**
 - [ ] README screenshots (capture from a live HA once Silvio finishes testing).

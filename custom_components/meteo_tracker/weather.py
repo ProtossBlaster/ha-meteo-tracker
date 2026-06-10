@@ -147,6 +147,28 @@ class MeteoTrackerWeather(MeteoTrackerEntity, WeatherEntity):
             return None
         return round(visibility / 1000, 2)
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Surface the fine-grained wording HA's 15-state ``condition`` can't hold.
+
+        ``detailed_description`` carries OpenWeather's precise, localised phrase
+        (e.g. "Temporale con pioggia forte"); the daily summary and any active
+        government alert are exposed here too, right on the weather entity.
+        """
+        onecall = self._onecall or {}
+        weather = (self._current.get("weather") or [{}])[0]
+        daily = onecall.get("daily") or []
+        alerts = onecall.get("alerts") or []
+        description = weather.get("description")
+        return {
+            "detailed_description": description.capitalize() if description else None,
+            "openweather_id": weather.get("id"),
+            "daily_summary": daily[0].get("summary") if daily else None,
+            "alert_active": bool(alerts),
+            "alert": alerts[0].get("event") if alerts else None,
+            "alert_count": len(alerts),
+        }
+
     # ---- Forecasts -------------------------------------------------------
 
     def _hourly(self) -> list[Forecast] | None:
