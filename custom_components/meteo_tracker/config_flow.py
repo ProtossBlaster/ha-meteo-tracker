@@ -17,12 +17,22 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import InvalidApiKey, OpenWeatherClient, OpenWeatherError, RateLimited
+from .api import (
+    InvalidApiKey,
+    OpenWeatherClient,
+    OpenWeatherError,
+    RateLimited,
+    async_detect_api_version,
+)
 from .const import (
+    API_V3,
+    API_V4,
     CONF_API_KEY,
+    CONF_API_VERSION,
     CONF_LANGUAGE,
     CONF_SCAN_INTERVAL_MINUTES,
     CONF_TRACKERS,
+    DEFAULT_API_VERSION,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL_MINUTES,
@@ -30,6 +40,7 @@ from .const import (
     MAX_SCAN_INTERVAL_MINUTES,
     MIN_SCAN_INTERVAL_MINUTES,
     SUPPORTED_LANGUAGES,
+    min_interval_for,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,10 +63,12 @@ def _trackers_selector() -> selector.EntitySelector:
     )
 
 
-def _interval_selector() -> selector.NumberSelector:
+def _interval_selector(api_version: str | None = None) -> selector.NumberSelector:
+    # Once the entry's One Call version is known the picker starts at the
+    # cheapest interval that version can afford, so the value cannot be wrong.
     return selector.NumberSelector(
         selector.NumberSelectorConfig(
-            min=MIN_SCAN_INTERVAL_MINUTES,
+            min=min_interval_for(api_version) if api_version else MIN_SCAN_INTERVAL_MINUTES,
             max=MAX_SCAN_INTERVAL_MINUTES,
             step=1,
             unit_of_measurement="min",
@@ -64,17 +77,73 @@ def _interval_selector() -> selector.NumberSelector:
     )
 
 
-async def _validate_key(hass, api_key: str) -> str | None:
-    """Return an error slug, or ``None`` when the key works."""
-    client = OpenWeatherClient(async_get_clientsession(hass), api_key)
+async def _detect_version(hass, api_key: str) -> tuple[str | None, str | None]:
+    """Return ``(one_call_version, error_slug)`` for this key.
+
+    Which One Call product a key can reach is not something the user can be
+    expected to know — OpenWeather sells 3.0 to nobody new, so the same key that
+    works for one account is refused for another. Probing settles it here, and
+    the answer is stored so no refresh ever has to guess.
+    """
+    try:
+        version = await async_detect_api_version(
+            async_get_clientsession(hass),
+            api_key,
+            hass.config.latitude,
+            hass.config.longitude,
+        )
+    except InvalidApiKey as err:
+        # The form can only show a fixed sentence, but OpenWeather's own wording
+        # is what tells the user whether the key is wrong, unsubscribed or just
+        # too new — so it goes in the log, where the form sends them looking.
+        _LOGGER.warning("OpenWeather refused the API key: %s", err)
+        return None, "invalid_auth"
+    except RateLimited:
+        return None, "rate_limited"
+    except OpenWeatherError as err:
+        _LOGGER.warning("Could not reach OpenWeather to check the key: %s", err)
+        return None, "cannot_connect"
+    _LOGGER.debug("OpenWeather key accepted by One Call %s", version)
+    return version, None
+
+
+def _version_selector() -> selector.SelectSelector:
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=[API_V3, API_V4],
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    )
+
+
+async def _key_reaches(hass, api_key: str, api_version: str) -> str | None:
+    """Check the key against one chosen version. Error slug, or ``None`` if it works.
+
+    Used when someone moves an existing entry between versions: the answer must
+    come from OpenWeather, not from what was true the day the entry was made.
+    """
+    client = OpenWeatherClient(
+        async_get_clientsession(hass), api_key, api_version=api_version
+    )
     try:
         await client.async_validate(hass.config.latitude, hass.config.longitude)
-    except InvalidApiKey:
-        return "invalid_auth"
+    except InvalidApiKey as err:
+        _LOGGER.warning(
+            "OpenWeather refused this key for One Call %s: %s", api_version, err
+        )
+        return "version_unavailable"
     except RateLimited:
         return "rate_limited"
-    except OpenWeatherError:
+    except OpenWeatherError as err:
+        _LOGGER.warning("Could not reach OpenWeather: %s", err)
         return "cannot_connect"
+    return None
+
+
+def _interval_error(api_version: str | None, minutes: int) -> str | None:
+    """Refuse an interval the chosen One Call version cannot afford."""
+    if minutes < min_interval_for(api_version):
+        return "interval_too_low_v4" if api_version == API_V4 else "interval_too_low"
     return None
 
 
@@ -94,20 +163,25 @@ class MeteoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-            error = await _validate_key(self.hass, user_input[CONF_API_KEY])
+            interval = int(user_input[CONF_SCAN_INTERVAL_MINUTES])
+            version, error = await _detect_version(
+                self.hass, user_input[CONF_API_KEY]
+            )
+            interval_error = _interval_error(version, interval)
             if error:
                 errors["base"] = error
             elif not user_input.get(CONF_TRACKERS):
                 errors[CONF_TRACKERS] = "no_trackers"
+            elif interval_error:
+                errors[CONF_SCAN_INTERVAL_MINUTES] = interval_error
             else:
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME) or DEFAULT_NAME,
                     data={
                         CONF_API_KEY: user_input[CONF_API_KEY],
+                        CONF_API_VERSION: version,
                         CONF_TRACKERS: user_input[CONF_TRACKERS],
-                        CONF_SCAN_INTERVAL_MINUTES: int(
-                            user_input[CONF_SCAN_INTERVAL_MINUTES]
-                        ),
+                        CONF_SCAN_INTERVAL_MINUTES: interval,
                         CONF_LANGUAGE: user_input[CONF_LANGUAGE],
                     },
                 )
@@ -160,17 +234,35 @@ class MeteoTrackerOptionsFlow(OptionsFlow):
         # Initial values live in entry.data; options override them once edited.
         current = {**self.config_entry.data, **self.config_entry.options}
 
+        stored_version = current.get(CONF_API_VERSION, DEFAULT_API_VERSION)
+
         if user_input is not None:
+            interval = int(user_input[CONF_SCAN_INTERVAL_MINUTES])
+            version = user_input.get(CONF_API_VERSION, stored_version)
+            # Only spend a request when the version actually changes: the entry
+            # is already proving every refresh that the current one works.
+            version_error = (
+                None
+                if version == stored_version
+                else await _key_reaches(
+                    self.hass, self.config_entry.data[CONF_API_KEY], version
+                )
+            )
+            interval_error = _interval_error(version, interval)
+
             if not user_input.get(CONF_TRACKERS):
                 errors[CONF_TRACKERS] = "no_trackers"
+            elif version_error:
+                errors[CONF_API_VERSION] = version_error
+            elif interval_error:
+                errors[CONF_SCAN_INTERVAL_MINUTES] = interval_error
             else:
                 return self.async_create_entry(
                     title="",
                     data={
                         CONF_TRACKERS: user_input[CONF_TRACKERS],
-                        CONF_SCAN_INTERVAL_MINUTES: int(
-                            user_input[CONF_SCAN_INTERVAL_MINUTES]
-                        ),
+                        CONF_API_VERSION: version,
+                        CONF_SCAN_INTERVAL_MINUTES: interval,
                         CONF_LANGUAGE: user_input[CONF_LANGUAGE],
                     },
                 )
@@ -186,7 +278,10 @@ class MeteoTrackerOptionsFlow(OptionsFlow):
                     default=current.get(
                         CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL_MINUTES
                     ),
-                ): _interval_selector(),
+                ): _interval_selector(stored_version),
+                vol.Required(
+                    CONF_API_VERSION, default=stored_version
+                ): _version_selector(),
                 vol.Required(
                     CONF_LANGUAGE,
                     default=current.get(CONF_LANGUAGE, DEFAULT_LANGUAGE),

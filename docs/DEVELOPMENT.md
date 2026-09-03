@@ -4,7 +4,9 @@ Internal map of the integration so any future change is quick to locate, build
 and validate. (User-facing docs live in the [README](../README.md); the version
 history is in the [CHANGELOG](../CHANGELOG.md).)
 
-Domain: `meteo_tracker` · Backend: OpenWeather **One Call API 3.0** + **Air Pollution API**.
+Domain: `meteo_tracker` · Backend: OpenWeather **One Call API 3.0 or 4.0** + **Air Pollution API**.
+Everything above `api.py` only ever sees the **3.0 payload shape**: on 4.0 the six
+endpoints are fetched and reassembled in `onecall_v4.py`, so no platform knows the difference.
 
 ---
 
@@ -15,7 +17,8 @@ Domain: `meteo_tracker` · Backend: OpenWeather **One Call API 3.0** + **Air Pol
 | `custom_components/meteo_tracker/manifest.json` | Integration metadata; **`version` must equal the released git tag** `vX.Y.Z`. |
 | `const.py` | All constants: URLs, defaults (refresh = 5 min), `SUPPORTED_LANGUAGES`, coordinate-dedup precision, attribution/model. |
 | `weather_codes.py` | **Pure** (no HA imports) — OpenWeather→HA condition mapping, wind compass, AQI label, moon phase. Unit-tested. |
-| `api.py` | Async OpenWeather client (`async_one_call`, `async_air_pollution`, `async_validate`) + typed errors. |
+| `api.py` | Async OpenWeather client (`async_one_call`, `async_air_pollution`, `async_validate`), One Call 3.0/4.0 dispatch, `async_detect_api_version`, typed errors. |
+| `onecall_v4.py` | **Pure** (no HA, no aiohttp) — rebuilds the 3.0 payload shape out of One Call 4.0's six endpoints. Unit-tested in CI. |
 | `coordinator.py` | `DataUpdateCoordinator`: resolves each tracker's lat/lon, **dedupes** by rounded coords, fetches per location. |
 | `__init__.py` | Setup/unload, builds client + coordinator, forwards platforms, options-reload listener. |
 | `config_flow.py` | UI config (api_key + trackers + interval + language) and options flow. Initial values go in `entry.data`; options override. |

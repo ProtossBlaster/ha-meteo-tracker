@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Meteo Tracker",
-        "description": "Weather per person, based on each device tracker's live location, via OpenWeather One Call API 3.0.",
+        "description": "Weather per person, based on each device tracker's live location, via the OpenWeather One Call API.",
         "data": {
           "name": "Name",
           "api_key": "OpenWeather API key",
@@ -12,17 +12,20 @@
           "language": "Language for weather descriptions"
         },
         "data_description": {
-          "api_key": "Create a free key at openweathermap.org and subscribe to 'One Call by Call' (1000 calls/day free with a spend limit).",
+          "api_key": "Create a free key at openweathermap.org and subscribe to 'One Call by Call' (1000 calls/day free with a spend limit). Which One Call version your key can reach is detected here: accounts created since OpenWeather stopped selling 3.0 get 4.0, older keys keep 3.0.",
           "trackers": "Each selected device tracker gets its own weather entity and sensor set, following that person's current location.",
-          "scan_interval_minutes": "5 minutes uses ~288 calls/day per distinct location. People standing together share a single call."
+          "scan_interval_minutes": "On One Call 3.0 a refresh costs 1 call per distinct location (5 min = ~288/day). On 4.0 the same picture is rebuilt from 6 requests, so the minimum is 10 minutes (~864/day). People standing together still share one set of calls."
         }
       }
     },
     "error": {
-      "invalid_auth": "Invalid API key.",
+      "invalid_auth": "OpenWeather refused this key. Usually the key itself is fine but the 'One Call by Call' subscription is missing, or the key was created in the last couple of hours and is not active yet. The exact wording OpenWeather returned is in the Home Assistant log.",
       "cannot_connect": "Cannot reach OpenWeather. Check your internet connection.",
       "rate_limited": "OpenWeather rejected the request: call limit reached.",
-      "no_trackers": "Select at least one device tracker."
+      "no_trackers": "Select at least one device tracker.",
+      "interval_too_low_v4": "One Call 4.0 needs six requests per refresh, so anything under 10 minutes runs past the 1000 calls/day free tier. OpenWeather only updates 4.0 every 10 minutes, so a shorter interval would buy duplicate data.",
+      "interval_too_low": "Refresh interval is shorter than this API version allows.",
+      "version_unavailable": "OpenWeather refused your key for that One Call version. You need a separate subscription for each version — subscribing to one does not extend to the other. A subscription activated in the last couple of hours may also not be live yet. The exact wording OpenWeather returned is in the Home Assistant log."
     }
   },
   "options": {
@@ -32,53 +35,120 @@
         "data": {
           "trackers": "People to follow (device trackers)",
           "scan_interval_minutes": "Refresh interval (minutes)",
-          "language": "Language for weather descriptions"
+          "language": "Language for weather descriptions",
+          "api_version": "One Call API version"
         },
         "data_description": {
-          "scan_interval_minutes": "5 minutes uses ~288 calls/day per distinct location. People standing together share a single call."
+          "scan_interval_minutes": "On One Call 3.0 a refresh costs 1 call per distinct location (5 min = ~288/day). On 4.0 the same picture is rebuilt from 6 requests, so the minimum is 10 minutes (~864/day). People standing together still share one set of calls.",
+          "api_version": "Which OpenWeather product this entry uses. Detected when the entry was created; change it here if you have since subscribed to the other one. Switching is checked against OpenWeather before it is saved, and 4.0 requires a refresh interval of at least 10 minutes."
         }
       }
     },
     "error": {
-      "no_trackers": "Select at least one device tracker."
+      "no_trackers": "Select at least one device tracker.",
+      "interval_too_low_v4": "One Call 4.0 needs six requests per refresh, so anything under 10 minutes runs past the 1000 calls/day free tier. OpenWeather only updates 4.0 every 10 minutes, so a shorter interval would buy duplicate data.",
+      "interval_too_low": "Refresh interval is shorter than this API version allows.",
+      "version_unavailable": "OpenWeather refused your key for that One Call version. You need a separate subscription for each version — subscribing to one does not extend to the other. A subscription activated in the last couple of hours may also not be live yet. The exact wording OpenWeather returned is in the Home Assistant log."
     }
   },
   "entity": {
     "sensor": {
-      "temperature": { "name": "Temperature" },
-      "apparent_temperature": { "name": "Apparent temperature" },
-      "temp_min_today": { "name": "Minimum temperature today" },
-      "temp_max_today": { "name": "Maximum temperature today" },
-      "pressure": { "name": "Pressure" },
-      "humidity": { "name": "Humidity" },
-      "dew_point": { "name": "Dew point" },
-      "uv_index": { "name": "UV index" },
-      "cloud_coverage": { "name": "Cloud coverage" },
-      "visibility": { "name": "Visibility" },
-      "wind_speed": { "name": "Wind speed" },
-      "wind_gust": { "name": "Wind gust" },
-      "wind_bearing": { "name": "Wind bearing" },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "apparent_temperature": {
+        "name": "Apparent temperature"
+      },
+      "temp_min_today": {
+        "name": "Minimum temperature today"
+      },
+      "temp_max_today": {
+        "name": "Maximum temperature today"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "cloud_coverage": {
+        "name": "Cloud coverage"
+      },
+      "visibility": {
+        "name": "Visibility"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "wind_bearing": {
+        "name": "Wind bearing"
+      },
       "wind_direction": {
         "name": "Wind direction",
         "state": {
-          "n": "North", "nne": "North-northeast", "ne": "Northeast", "ene": "East-northeast",
-          "e": "East", "ese": "East-southeast", "se": "Southeast", "sse": "South-southeast",
-          "s": "South", "ssw": "South-southwest", "sw": "Southwest", "wsw": "West-southwest",
-          "w": "West", "wnw": "West-northwest", "nw": "Northwest", "nnw": "North-northwest"
+          "n": "North",
+          "nne": "North-northeast",
+          "ne": "Northeast",
+          "ene": "East-northeast",
+          "e": "East",
+          "ese": "East-southeast",
+          "se": "Southeast",
+          "sse": "South-southeast",
+          "s": "South",
+          "ssw": "South-southwest",
+          "sw": "Southwest",
+          "wsw": "West-southwest",
+          "w": "West",
+          "wnw": "West-northwest",
+          "nw": "Northwest",
+          "nnw": "North-northwest"
         }
       },
-      "precipitation_1h": { "name": "Precipitation (last hour)" },
-      "precipitation_probability": { "name": "Precipitation probability" },
-      "precipitation_next_hour": { "name": "Precipitation next hour" },
-      "rain_today": { "name": "Rain today" },
-      "snow_today": { "name": "Snow today" },
-      "condition": { "name": "Condition" },
-      "weather_description": { "name": "Weather description" },
-      "weather_summary": { "name": "Daily summary" },
-      "sunrise": { "name": "Sunrise" },
-      "sunset": { "name": "Sunset" },
-      "moonrise": { "name": "Moonrise" },
-      "moonset": { "name": "Moonset" },
+      "precipitation_1h": {
+        "name": "Precipitation (last hour)"
+      },
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
+      "precipitation_next_hour": {
+        "name": "Precipitation next hour"
+      },
+      "rain_today": {
+        "name": "Rain today"
+      },
+      "snow_today": {
+        "name": "Snow today"
+      },
+      "condition": {
+        "name": "Condition"
+      },
+      "weather_description": {
+        "name": "Weather description"
+      },
+      "weather_summary": {
+        "name": "Daily summary"
+      },
+      "sunrise": {
+        "name": "Sunrise"
+      },
+      "sunset": {
+        "name": "Sunset"
+      },
+      "moonrise": {
+        "name": "Moonrise"
+      },
+      "moonset": {
+        "name": "Moonset"
+      },
       "moon_phase": {
         "name": "Moon phase",
         "state": {
@@ -92,8 +162,12 @@
           "waning_crescent": "Waning crescent"
         }
       },
-      "moon_phase_value": { "name": "Moon phase value" },
-      "air_quality_index": { "name": "Air quality index" },
+      "moon_phase_value": {
+        "name": "Moon phase value"
+      },
+      "air_quality_index": {
+        "name": "Air quality index"
+      },
       "air_quality_label": {
         "name": "Air quality",
         "state": {
@@ -104,23 +178,49 @@
           "very_poor": "Very poor"
         }
       },
-      "pm25": { "name": "PM2.5" },
-      "pm10": { "name": "PM10" },
-      "ozone": { "name": "Ozone" },
-      "nitrogen_dioxide": { "name": "Nitrogen dioxide" },
-      "sulphur_dioxide": { "name": "Sulphur dioxide" },
-      "carbon_monoxide": { "name": "Carbon monoxide" },
-      "nitrogen_monoxide": { "name": "Nitrogen monoxide" },
-      "ammonia": { "name": "Ammonia" },
-      "location": { "name": "Location" },
-      "last_measured": { "name": "Last measured" }
+      "pm25": {
+        "name": "PM2.5"
+      },
+      "pm10": {
+        "name": "PM10"
+      },
+      "ozone": {
+        "name": "Ozone"
+      },
+      "nitrogen_dioxide": {
+        "name": "Nitrogen dioxide"
+      },
+      "sulphur_dioxide": {
+        "name": "Sulphur dioxide"
+      },
+      "carbon_monoxide": {
+        "name": "Carbon monoxide"
+      },
+      "nitrogen_monoxide": {
+        "name": "Nitrogen monoxide"
+      },
+      "ammonia": {
+        "name": "Ammonia"
+      },
+      "location": {
+        "name": "Location"
+      },
+      "last_measured": {
+        "name": "Last measured"
+      }
     },
     "binary_sensor": {
-      "weather_alert": { "name": "Weather alert" },
-      "precipitation_expected": { "name": "Precipitation expected" }
+      "weather_alert": {
+        "name": "Weather alert"
+      },
+      "precipitation_expected": {
+        "name": "Precipitation expected"
+      }
     },
     "button": {
-      "refresh": { "name": "Refresh" }
+      "refresh": {
+        "name": "Refresh"
+      }
     }
   }
 }

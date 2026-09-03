@@ -14,7 +14,8 @@
 A **complete, professional** weather integration that gives **each person their own
 weather**, based on where they actually are. You pick one or more `device_tracker`
 entities; Meteo Tracker follows each person's live GPS position and pulls a full
-weather picture from **OpenWeather One Call API 3.0** — refreshed **every 5 minutes**.
+weather picture from the **OpenWeather One Call API** — refreshed **every 5 minutes**
+(**10** on One Call 4.0, see the call budget below).
 
 > 🇮🇹 *Versione italiana più in basso → [Italiano](#-italiano).*
 
@@ -45,29 +46,57 @@ weather picture from **OpenWeather One Call API 3.0** — refreshed **every 5 mi
 - Home Assistant **2024.12** or newer.
 - At least one **GPS-based `device_tracker`** (HA Companion App, Owntracks, Traccar,
   iCloud, Life360, etc.).
-- An **OpenWeather One Call API 3.0** key (free tier available — see below).
+- An **OpenWeather One Call** key — 3.0 or 4.0 (free tier available — see below).
 
 ### Getting an API key
 
 1. Create a free account at [openweathermap.org](https://openweathermap.org/).
 2. Go to **API keys** and copy your key.
-3. Subscribe to **“One Call by Call”** (the plan that powers One Call API 3.0).
-   It is **free up to 1,000 calls/day** — to stay free, open
-   *Billing plans → set a “calls per day” limit of 1000* so you are never charged.
+3. Subscribe to **“One Call by Call”**. It is **free up to 1,000 calls/day** — to
+   stay free, open *Billing plans → set a “calls per day” limit of 1000* so you are
+   never charged.
 
-> A brand-new key can take **a couple of hours** to activate. If setup fails with
-> “invalid API key” right after creating it, wait and try again.
+#### Which One Call version will I get?
+
+Whichever one your account can buy — Meteo Tracker works out which at setup and
+remembers the answer, so there is nothing to choose.
+
+- **New accounts get One Call 4.0.** OpenWeather no longer offers 3.0 on the
+  Billing plans page of a newly created account.
+- **Keys that already have a 3.0 subscription keep using it.** 3.0 has not been
+  switched off, and it is the cheaper of the two here — one request per refresh
+  against six — so Meteo Tracker prefers it whenever it works.
+
+Already set up and want to move? **Settings → Devices & Services → Meteo Tracker →
+Configure** has a *One Call API version* field. Subscribe to the other product on
+openweathermap.org first — a subscription to one version does not extend to the
+other — then switch it here. The change is checked against OpenWeather before it is
+saved, so a version you have not bought is refused instead of breaking the entry.
+
+> A brand-new key can take **a couple of hours** to activate, and during that
+> window OpenWeather refuses it exactly as it refuses an unsubscribed key. If
+> setup fails right after you created the key, wait and try again — the reason
+> OpenWeather actually gave is written to the Home Assistant log.
 
 #### 💰 Call-budget cheat sheet
 
-Each distinct location costs **1 One Call request** per refresh (air quality uses a
-**separate free API** and does *not* count against the 1,000/day budget).
+One refresh of one location costs **1 request on One Call 3.0**. On **4.0** the same
+picture is rebuilt from **6** — current conditions, the minute timeline, three pages
+of hourly (it returns 20 records at a time and we want 48) and one page of daily —
+plus **one request per active weather alert**, because 4.0 returns alert IDs and
+charges for the text behind each one. Air quality uses a **separate free API** and
+does *not* count against the 1,000/day budget either way.
 
-| Refresh interval | Calls/day per location | Distinct locations within 1,000/day |
-|---|---|---|
-| 5 min (default) | 288 | up to **3** |
-| 10 min | 144 | up to **6** |
-| 15 min | 96 | up to **10** |
+| Refresh interval | 3.0: calls/day | 3.0: locations free | 4.0: calls/day | 4.0: locations free |
+|---|---|---|---|---|
+| 5 min | 288 | up to **3** | *below the 4.0 minimum* | — |
+| 10 min | 144 | up to **6** | 864 | **1** |
+| 15 min | 96 | up to **10** | 576 | **1** |
+| 30 min | 48 | up to **20** | 288 | up to **3** |
+
+**On 4.0 the shortest interval is 10 minutes.** That is not a limit we invented:
+OpenWeather refreshes the 4.0 model every 10 minutes and recommends polling at the
+same rate, so anything shorter would pay full price for identical data.
 
 People in the same place share one call, so a whole family at home counts as **one**
 location. If you follow many people in different cities, raise the interval.
@@ -98,9 +127,9 @@ Everything is configured from the UI — no YAML.
 | Field | Description |
 |---|---|
 | **Name** | A label for this integration instance. |
-| **OpenWeather API key** | Your One Call 3.0 key. |
+| **OpenWeather API key** | Your One Call key. The version it can reach (3.0 or 4.0) is detected here. |
 | **People to follow** | One or more `device_tracker` entities. |
-| **Refresh interval** | Minutes between updates (default **5**). |
+| **Refresh interval** | Minutes between updates (default **5**; minimum **10** on One Call 4.0). |
 | **Language** | Language of the textual weather descriptions. |
 
 You can change trackers, interval and language any time via the integration's
@@ -197,11 +226,18 @@ aggiornato **ogni 5 minuti**.
 - 📈 Previsioni **orarie (48 h)**, **giornaliere (8 gg)** e bigiornaliere.
 
 **Requisiti**: Home Assistant 2024.12+, un `device_tracker` GPS e una chiave
-**OpenWeather One Call 3.0** (gratis fino a 1000 chiamate/giorno impostando il tetto).
+**OpenWeather One Call** (gratis fino a 1000 chiamate/giorno impostando il tetto).
+Quale versione ottieni non lo scegli tu: gli account nuovi possono comprare solo la
+**4.0**, perché OpenWeather non offre più la 3.0 a chi si iscrive adesso; le chiavi
+che hanno già un abbonamento 3.0 continuano a usarlo. Meteo Tracker lo rileva da solo
+in fase di configurazione e preferisce la 3.0 quando funziona, perché costa meno.
 
-**Budget chiamate**: a 5 minuti servono ~288 chiamate/giorno per ogni posizione
-distinta → fino a **3 posizioni** restano gratis. Persone nello stesso luogo
-condividono una sola chiamata. Per molte persone in città diverse, alza l'intervallo.
+**Budget chiamate**: sulla **3.0** un aggiornamento costa **1 chiamata** per posizione
+distinta → a 5 minuti sono ~288/giorno e restano gratis fino a **3 posizioni**. Sulla
+**4.0** la stessa immagine si ricompone da **6 richieste** (più una per ogni allerta
+attiva), quindi l'intervallo minimo è **10 minuti**: sono ~864 chiamate/giorno per
+**una** posizione. Persone nello stesso luogo condividono le stesse chiamate; per più
+persone in città diverse, alza l'intervallo.
 
 **Installazione**: HACS → *Custom repositories* → aggiungi questo repo come
 *Integration*, installa, riavvia. Poi *Impostazioni → Dispositivi e servizi →

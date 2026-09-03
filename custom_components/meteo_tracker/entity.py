@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL
+from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, model_for_version
 from .coordinator import MeteoTrackerCoordinator
 
 
@@ -26,7 +26,7 @@ class MeteoTrackerEntity(CoordinatorEntity[MeteoTrackerCoordinator]):
             identifiers={(DOMAIN, f"{coordinator.entry.entry_id}_{tracker_id}")},
             name=self._tracker_data.get("name", tracker_id),
             manufacturer=MANUFACTURER,
-            model=MODEL,
+            model=model_for_version(coordinator.client.api_version),
         )
 
     @property
