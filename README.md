@@ -102,9 +102,11 @@ does *not* count against the 1,000/day budget either way.
 | 15 min | 96 | up to **10** | 576 | **1** |
 | 30 min | 48 | up to **20** | 288 | up to **3** |
 
-**On 4.0 the shortest interval is 10 minutes.** That is not a limit we invented:
-OpenWeather refreshes the 4.0 model every 10 minutes and recommends polling at the
-same rate, so anything shorter would pay full price for identical data.
+**On 4.0 the shortest interval is 10 minutes.** The reason is cost, not freshness.
+OpenWeather updates *both* models every 10 minutes and its documentation recommends
+polling *either* version at that rate — so a 5-minute interval fetches the same data
+twice on 3.0 as well. There it costs one request and nobody notices; on 4.0 it costs
+six, and a refresh you cannot use is a refresh you paid full price for.
 
 > ⚠️ **The daily allowance belongs to your OpenWeather account, not to this
 > installation.** It is shared by every API key on the account and by everything
