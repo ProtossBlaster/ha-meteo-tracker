@@ -158,20 +158,30 @@ def _distinct_locations(entry: ConfigEntry) -> int:
     return max(len(trackers), 1)
 
 
-def _budget_lines(api_version: str | None, locations: int) -> str:
-    """Daily One Call spend at each sensible interval, for this entry's size.
+def _budget_table(api_version: str | None, locations: int) -> str:
+    """Daily One Call spend: refresh interval down the side, installations across.
 
-    Deliberately free of words: the surrounding description is translated, and
-    these lines are numbers plus a mark, so they read the same in any language.
+    The columns are the point. The allowance belongs to the OpenWeather account,
+    so a second Home Assistant on the same account halves the headroom — and the
+    two cannot see each other, so each one sits happily on its own floor while
+    together they are over.
+
+    Deliberately free of words: the surrounding description is translated, and a
+    grid of numbers plus a mark reads the same in every language.
     """
-    out = []
+    installs = (1, 2, 3)
+    rows = ["| min | " + " | ".join(f"{n}×" for n in installs) + " |",
+            "|---:|" + "---:|" * len(installs)]
     for minutes in (5, 10, 15, 20, 30, 60):
         if minutes < min_interval_for(api_version):
             continue
-        per_day = calls_per_day(api_version, minutes, locations)
-        mark = "✅" if per_day <= FREE_CALLS_PER_DAY else "⚠️"
-        out.append(f"- {minutes} min → {per_day} {mark}")
-    return "\n".join(out)
+        cells = []
+        for n in installs:
+            per_day = calls_per_day(api_version, minutes, locations) * n
+            mark = "✅" if per_day <= FREE_CALLS_PER_DAY else "⚠️"
+            cells.append(f"{per_day} {mark}")
+        rows.append(f"| **{minutes}** | " + " | ".join(cells) + " |")
+    return "\n".join(rows)
 
 
 def _interval_error(api_version: str | None, minutes: int) -> str | None:
@@ -417,6 +427,6 @@ class MeteoTrackerOptionsFlow(OptionsFlow):
                 "per_refresh": str(calls_per_refresh(stored_version)),
                 "locations": str(locations),
                 "free": str(FREE_CALLS_PER_DAY),
-                "budget": _budget_lines(stored_version, locations),
+                "budget": _budget_table(stored_version, locations),
             },
         )

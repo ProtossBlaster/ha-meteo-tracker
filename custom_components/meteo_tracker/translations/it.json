@@ -45,7 +45,7 @@
     "step": {
       "init": {
         "title": "Opzioni Meteo Tracker",
-        "description": "Questa configurazione usa **One Call {version}**. Richieste per aggiornamento, per ogni località distinta: **{per_refresh}**. Località distinte seguite adesso: **{locations}**.\n\nRichieste One Call al giorno per intervallo — ✅ entro le {free}/giorno gratuite, ⚠️ oltre:\n\n{budget}\n\nQuel tetto appartiene al tuo **account OpenWeather**, non a questa installazione: ogni chiave dell'account e ogni Home Assistant che le usa attingono alle stesse {free}. Sulla 4.0 ogni allerta meteo costa una richiesta in più. La qualità dell'aria usa un'API gratuita separata e non è conteggiata qui.",
+        "description": "Questa configurazione usa **One Call {version}**. Richieste per aggiornamento, per ogni località distinta: **{per_refresh}**. Località distinte seguite adesso: **{locations}**.\n\nRichieste One Call al giorno — l'intervallo di aggiornamento in verticale, il **numero di installazioni Home Assistant che condividono il tuo account OpenWeather** in orizzontale. ✅ entro le {free}/giorno gratuite, ⚠️ oltre:\n\n{budget}\n\nIl tetto appartiene all'**account**, non a questa installazione: ogni chiave e tutto ciò che la usa attingono alle stesse {free}, e due installazioni non si vedono fra loro — ciascuna può stare sul proprio minimo mentre insieme sforano. Sulla 4.0 ogni allerta meteo costa una richiesta in più. La qualità dell'aria usa un'API gratuita separata e non è conteggiata.",
         "data": {
           "trackers": "Persone da seguire (device tracker)",
           "scan_interval_minutes": "Intervallo di aggiornamento (minuti)",

@@ -95,37 +95,48 @@ plus **one request per active weather alert**, because 4.0 returns alert IDs and
 charges for the text behind each one. Air quality uses a **separate free API** and
 does *not* count against the 1,000/day budget either way.
 
-| Refresh interval | 3.0: calls/day | 3.0: locations free | 4.0: calls/day | 4.0: locations free |
-|---|---|---|---|---|
-| 5 min | 288 | up to **3** | *below the 4.0 minimum* | — |
-| 10 min | 144 | up to **6** | 864 | **1** |
-| 15 min | 96 | up to **10** | 576 | **1** |
-| 30 min | 48 | up to **20** | 288 | up to **3** |
-
 **On 4.0 the shortest interval is 10 minutes.** The reason is cost, not freshness.
 OpenWeather updates *both* models every 10 minutes and its documentation recommends
 polling *either* version at that rate — so a 5-minute interval fetches the same data
 twice on 3.0 as well. There it costs one request and nobody notices; on 4.0 it costs
 six, and a refresh you cannot use is a refresh you paid full price for.
 
-> ⚠️ **The daily allowance belongs to your OpenWeather account, not to this
-> installation.** It is shared by every API key on the account and by everything
-> using them — a second Home Assistant, a test instance, a script of your own.
-> Two installations cannot see each other, so two perfectly configured ones can go
-> over the limit together without either noticing. To stay inside the free 1,000
-> calls/day with one location each:
->
-> | Installations sharing the account | One Call 3.0 | One Call 4.0 |
-> |---|---|---|
-> | 1 | 2 min | 9 min |
-> | 2 | 3 min | 18 min |
-> | 3 | 5 min | 26 min |
->
-> *Billing plans → set a "calls per day" limit of 1000* remains the only way to make
-> a charge impossible: past the cap OpenWeather stops answering instead of billing.
+⚠️ **The daily allowance belongs to your OpenWeather account, not to this
+installation.** It is shared by every API key on the account and by everything using
+them — a second Home Assistant, a test instance, a script of your own. Two
+installations cannot see each other, so each can sit on its own minimum interval
+while together they are over the limit.
 
-People in the same place share one call, so a whole family at home counts as **one**
-location. If you follow many people in different cities, raise the interval.
+Daily One Call requests, **one distinct location per installation** — ✅ within the
+free 1,000/day, ⚠️ past it.
+
+**One Call 3.0** — 1 request per refresh:
+
+| Refresh interval | 1 installation | 2 | 3 |
+|---:|---:|---:|---:|
+| **5 min** | 288 ✅ | 576 ✅ | 864 ✅ |
+| **10 min** | 144 ✅ | 288 ✅ | 432 ✅ |
+| **15 min** | 96 ✅ | 192 ✅ | 288 ✅ |
+| **20 min** | 72 ✅ | 144 ✅ | 216 ✅ |
+| **30 min** | 48 ✅ | 96 ✅ | 144 ✅ |
+| **60 min** | 24 ✅ | 48 ✅ | 72 ✅ |
+
+**One Call 4.0** — 6 requests per refresh, plus one per active weather alert:
+
+| Refresh interval | 1 installation | 2 | 3 |
+|---:|---:|---:|---:|
+| **10 min** | 864 ✅ | 1728 ⚠️ | 2592 ⚠️ |
+| **15 min** | 576 ✅ | 1152 ⚠️ | 1728 ⚠️ |
+| **20 min** | 432 ✅ | 864 ✅ | 1296 ⚠️ |
+| **30 min** | 288 ✅ | 576 ✅ | 864 ✅ |
+| **60 min** | 144 ✅ | 288 ✅ | 432 ✅ |
+
+Multiply by the number of distinct locations each installation follows: people in
+the same place share one set of requests, so a family at home counts as one.
+*Billing plans → set a "calls per day" limit of 1000* remains the only way to make a
+charge impossible — past the cap OpenWeather stops answering instead of billing. The
+same grid, filled in with your own numbers, is shown on the integration's
+**Configure** screen.
 
 ---
 
