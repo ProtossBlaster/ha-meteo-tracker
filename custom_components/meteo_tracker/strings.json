@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Meteo Tracker",
-        "description": "Weather per person, based on each device tracker's live location, via the OpenWeather One Call API.",
+        "description": "Weather per person, based on each device tracker's live location, via the OpenWeather One Call API.\n\n**Before you pick a refresh interval.** Which One Call version your key reaches is detected when you submit this form — 3.0 answers a refresh with one request, 4.0 needs six. Daily requests for **one location**, ✅ within the free {free}/day, ⚠️ past it:\n\n{budget}\n\nMultiply by the distinct locations you follow (people in the same place share one set of requests) **and by the number of Home Assistant installations sharing your OpenWeather account** — the allowance belongs to the account, and two installations cannot see each other. The exact figures for this entry are on its Configure screen once it is set up.",
         "data": {
           "name": "Name",
           "api_key": "OpenWeather API key",

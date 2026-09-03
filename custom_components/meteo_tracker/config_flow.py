@@ -184,6 +184,26 @@ def _budget_table(api_version: str | None, locations: int) -> str:
     return "\n".join(rows)
 
 
+def _versions_table() -> str:
+    """The two versions side by side, one location, one installation.
+
+    Shown while adding the integration, where the interval is chosen for the
+    first time and which version the key reaches is not known yet — so both are
+    laid out and the six-fold gap is visible before anything is committed.
+    """
+    rows = ["| min | 3.0 | 4.0 |", "|---:|---:|---:|"]
+    for minutes in (5, 10, 15, 20, 30, 60):
+        cells = []
+        for version in (API_V3, API_V4):
+            if minutes < min_interval_for(version):
+                cells.append("—")
+                continue
+            per_day = calls_per_day(version, minutes, 1)
+            cells.append(f"{per_day} {'✅' if per_day <= FREE_CALLS_PER_DAY else '⚠️'}")
+        rows.append(f"| **{minutes}** | " + " | ".join(cells) + " |")
+    return "\n".join(rows)
+
+
 def _interval_error(api_version: str | None, minutes: int) -> str | None:
     """Refuse an interval the chosen One Call version cannot afford."""
     if minutes < min_interval_for(api_version):
@@ -259,7 +279,13 @@ class MeteoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(
-            step_id="user", data_schema=schema, errors=errors
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "free": str(FREE_CALLS_PER_DAY),
+                "budget": _versions_table(),
+            },
         )
 
     async def async_step_reauth(
