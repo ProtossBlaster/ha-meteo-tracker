@@ -38,9 +38,12 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL_MINUTES,
     DOMAIN,
+    FREE_CALLS_PER_DAY,
     MAX_SCAN_INTERVAL_MINUTES,
     MIN_SCAN_INTERVAL_MINUTES,
     SUPPORTED_LANGUAGES,
+    calls_per_day,
+    calls_per_refresh,
     min_interval_for,
 )
 
@@ -139,6 +142,36 @@ async def _key_reaches(hass, api_key: str, api_version: str) -> str | None:
         _LOGGER.warning("Could not reach OpenWeather: %s", err)
         return "cannot_connect"
     return None
+
+
+def _distinct_locations(entry: ConfigEntry) -> int:
+    """How many places this entry actually pays for each cycle.
+
+    The coordinator dedupes by rounded coordinates, so a household at home costs
+    one fetch, not one per person. Before the first refresh there is nothing to
+    read, and the tracker count is the honest upper bound.
+    """
+    counted = getattr(getattr(entry, "runtime_data", None), "location_count", 0)
+    if counted:
+        return counted
+    trackers = entry.options.get(CONF_TRACKERS, entry.data.get(CONF_TRACKERS, []))
+    return max(len(trackers), 1)
+
+
+def _budget_lines(api_version: str | None, locations: int) -> str:
+    """Daily One Call spend at each sensible interval, for this entry's size.
+
+    Deliberately free of words: the surrounding description is translated, and
+    these lines are numbers plus a mark, so they read the same in any language.
+    """
+    out = []
+    for minutes in (5, 10, 15, 20, 30, 60):
+        if minutes < min_interval_for(api_version):
+            continue
+        per_day = calls_per_day(api_version, minutes, locations)
+        mark = "✅" if per_day <= FREE_CALLS_PER_DAY else "⚠️"
+        out.append(f"- {minutes} min → {per_day} {mark}")
+    return "\n".join(out)
 
 
 def _interval_error(api_version: str | None, minutes: int) -> str | None:
@@ -374,6 +407,16 @@ class MeteoTrackerOptionsFlow(OptionsFlow):
                 ): _language_selector(),
             }
         )
+        locations = _distinct_locations(self.config_entry)
         return self.async_show_form(
-            step_id="init", data_schema=schema, errors=errors
+            step_id="init",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "version": stored_version,
+                "per_refresh": str(calls_per_refresh(stored_version)),
+                "locations": str(locations),
+                "free": str(FREE_CALLS_PER_DAY),
+                "budget": _budget_lines(stored_version, locations),
+            },
         )

@@ -45,6 +45,7 @@
     "step": {
       "init": {
         "title": "Meteo Tracker options",
+        "description": "This entry uses **One Call {version}**. Requests per refresh, per distinct location: **{per_refresh}**. Distinct locations right now: **{locations}**.\n\nDaily One Call requests by interval — ✅ within the free {free}/day, ⚠️ past it:\n\n{budget}\n\nThat allowance belongs to your **OpenWeather account**, not to this installation: every key on the account and every Home Assistant using them draw from the same {free}. Weather alerts cost one extra request each on 4.0. Air quality uses a separate free API and is not counted here.",
         "data": {
           "trackers": "People to follow (device trackers)",
           "scan_interval_minutes": "Refresh interval (minutes)",

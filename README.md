@@ -14,8 +14,8 @@
 A **complete, professional** weather integration that gives **each person their own
 weather**, based on where they actually are. You pick one or more `device_tracker`
 entities; Meteo Tracker follows each person's live GPS position and pulls a full
-weather picture from the **OpenWeather One Call API** — refreshed **every 5 minutes**
-(**10** on One Call 4.0, see the call budget below).
+weather picture from the **OpenWeather One Call API** — refreshed **every 10 minutes**
+by default (see the call budget below).
 
 > 🇮🇹 *Versione italiana più in basso → [Italiano](#-italiano).*
 
@@ -155,7 +155,7 @@ Everything is configured from the UI — no YAML.
 | **Name** | A label for this integration instance. |
 | **OpenWeather API key** | Your One Call key. The version it can reach (3.0 or 4.0) is detected here. |
 | **People to follow** | One or more `device_tracker` entities. |
-| **Refresh interval** | Minutes between updates (default **5**; minimum **10** on One Call 4.0). |
+| **Refresh interval** | Minutes between updates (default **10**; minimum **10** on One Call 4.0, **1** on 3.0). |
 | **Language** | Language of the textual weather descriptions. |
 
 You can change trackers, interval and language any time via the integration's

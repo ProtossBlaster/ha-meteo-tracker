@@ -77,6 +77,11 @@ class MeteoTrackerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.entry = entry
         self.client = client
         self.trackers = trackers
+        # How many distinct places the last cycle actually paid for. People
+        # standing together share one fetch, so this is below the tracker count
+        # whenever a household is at home — and it is what the call budget rides
+        # on, which is why the options screen reads it rather than guessing.
+        self.location_count = 0
 
     async def _async_update_data(self) -> dict[str, Any]:
         result: dict[str, Any] = {}
@@ -136,6 +141,8 @@ class MeteoTrackerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "longitude": lon,
                 **cache[key],
             }
+
+        self.location_count = len(cache)
 
         # Only fail the whole coordinator when every coordful tracker errored,
         # so a single flaky location degrades gracefully instead of blanking all.

@@ -40,6 +40,16 @@ latest released git tag (`vX.Y.Z`).
   breaking the entry.
 
 ### Changed
+- **Default refresh interval is now 10 minutes, was 5.** OpenWeather updates both
+  One Call models every 10 minutes and its documentation recommends polling either
+  version at that rate, so the old default fetched the same data twice on every
+  other cycle. The *minimum* stays at 1 minute on 3.0 for anyone who wants it, and
+  existing entries keep the interval they were configured with.
+- **The options screen now shows what this installation actually spends.** It reads
+  the distinct locations the coordinator last paid for — people standing together
+  share one fetch — and lists the daily One Call requests at each interval, marking
+  the ones past the free 1,000/day. It also says that the allowance belongs to the
+  OpenWeather account, so a second Home Assistant draws from the same pot.
 - **Refresh interval has a 10-minute floor on One Call 4.0.** One refresh costs six
   requests there instead of one, and OpenWeather only updates the 4.0 model every ten
   minutes — a shorter interval would pay full price for identical data. 3.0 entries
