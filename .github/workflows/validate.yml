@@ -3,6 +3,10 @@ name: Validate
 on:
   push:
   pull_request:
+  # Lets the checks be re-run by hand — and re-run at a tag, which is what the
+  # release checklist asks for. GitHub also disables scheduled workflows after
+  # 60 days without repository activity, and this is the way back on.
+  workflow_dispatch:
   schedule:
     - cron: "0 6 * * *"
 
