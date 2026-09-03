@@ -10,6 +10,15 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-09-04
+
+### Added
+- **French translations**, contributed by @minimicro34 in #4 and asked for in #2. Entity names and
+  the whole config/options flow now follow the Home Assistant UI language: previously selecting FR
+  translated only the weather descriptions OpenWeather returns, while the entities stayed English.
+  All 106 keys, with the `{free}`, `{budget}` and `{version}` placeholders unchanged, and the wind
+  rose, moon phases and air-quality labels translated as display names with their state slugs intact.
+
 ## [0.2.2] - 2026-09-03
 
 ### Fixed
