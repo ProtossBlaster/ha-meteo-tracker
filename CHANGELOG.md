@@ -10,6 +10,27 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-03
+
+Documentation only — no change to the integration's behaviour.
+
+### Fixed
+- **The feature list still advertised the old refresh interval.** It read "5-minute
+  refresh by default, configurable 1–60 min" — wrong on both numbers since 0.2.0 —
+  and never mentioned One Call 4.0, so anyone skimming the first section would not
+  learn the integration supports two versions.
+- **`info.md` still said the integration refreshes every 5 minutes.**
+
+### Added
+- The call-budget grid — refresh interval against the number of Home Assistant
+  installations sharing one OpenWeather account — now also appears in `info.md` and
+  in `docs/DEVELOPMENT.md`, alongside the README and the two screens inside the
+  integration. Every figure in every table was recomputed from `calls_per_refresh()`
+  rather than copied: 57 cells checked, all correct.
+
+The 0.1.0 entry below still describes a 5-minute default. That was true when 0.1.0
+shipped and is left alone: this file is a record, not a description of today.
+
 ## [0.2.0] - 2026-09-03
 
 ### Added

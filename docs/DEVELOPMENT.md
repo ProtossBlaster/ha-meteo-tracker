@@ -56,6 +56,19 @@ endpoints are fetched and reassembled in `onecall_v4.py`, so no platform knows t
 
 - **Location resolution** (`coordinator.resolve_coords`): tracker GPS attrs → home
   zone (state `home`/`casa`) → `zone.<slug>`. No coords ⇒ that person unavailable.
+- **Call cost**: one refresh of one location is **1 request on 3.0**, **6 on 4.0**
+  (current + 1min + 3 pages of 1h, since it caps at 20 records + 1day), plus one per
+  active alert. `const.calls_per_refresh()` derives that from `onecall_v4`'s page
+  sizes rather than hard-coding it, so the figures the UI shows cannot drift from the
+  requests actually made. The free 1,000/day is **per OpenWeather account**, so two
+  installations sharing a key share the allowance and cannot see each other.
+
+  | Refresh | 4.0, 1 install. | 2 | 3 |
+  |---:|---:|---:|---:|
+  | 10 min | 864 ✅ | 1728 ⚠️ | 2592 ⚠️ |
+  | 20 min | 432 ✅ | 864 ✅ | 1296 ⚠️ |
+  | 30 min | 288 ✅ | 576 ✅ | 864 ✅ |
+
 - **Dedup**: coords rounded to `COORD_PRECISION` (4 dp ≈ 11 m) → one One Call per
   unique spot. Air Pollution is a **separate free API** (doesn't count vs the 1000/day).
 - **Forecast push**: `weather._handle_coordinator_update` writes state and schedules
