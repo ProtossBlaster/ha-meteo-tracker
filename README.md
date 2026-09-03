@@ -35,9 +35,13 @@ by default (see the call budget below).
 - ⚠️ **Government weather alerts** — exposed as a binary sensor with full details.
 - 📈 **Full forecasts** — hourly (48 h), daily (8 days) and twice-daily, via the
   modern Home Assistant forecast API (works with the Weather Forecast card).
-- ⏱️ **5-minute refresh** by default, configurable 1–60 min.
-- 💰 **Call-budget friendly** — people standing in the same spot share a single API
-  call (coordinates are de-duplicated to ~11 m).
+- 🔀 **One Call 3.0 or 4.0** — detected from your key at setup, and switchable later.
+  New OpenWeather accounts can only buy 4.0; keys that already have 3.0 keep it.
+- ⏱️ **10-minute refresh** by default — adjustable from 1 min on One Call 3.0, and
+  from 10 min on 4.0, where a refresh costs six requests instead of one.
+- 💰 **Call-budget friendly** — people standing in the same spot share a single set of
+  requests (coordinates are de-duplicated to ~11 m), and both the setup and Configure
+  screens show what your settings actually spend per day.
 
 ---
 
