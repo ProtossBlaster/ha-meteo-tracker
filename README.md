@@ -106,6 +106,22 @@ does *not* count against the 1,000/day budget either way.
 OpenWeather refreshes the 4.0 model every 10 minutes and recommends polling at the
 same rate, so anything shorter would pay full price for identical data.
 
+> ⚠️ **The daily allowance belongs to your OpenWeather account, not to this
+> installation.** It is shared by every API key on the account and by everything
+> using them — a second Home Assistant, a test instance, a script of your own.
+> Two installations cannot see each other, so two perfectly configured ones can go
+> over the limit together without either noticing. To stay inside the free 1,000
+> calls/day with one location each:
+>
+> | Installations sharing the account | One Call 3.0 | One Call 4.0 |
+> |---|---|---|
+> | 1 | 2 min | 9 min |
+> | 2 | 3 min | 18 min |
+> | 3 | 5 min | 26 min |
+>
+> *Billing plans → set a "calls per day" limit of 1000* remains the only way to make
+> a charge impossible: past the cap OpenWeather stops answering instead of billing.
+
 People in the same place share one call, so a whole family at home counts as **one**
 location. If you follow many people in different cities, raise the interval.
 

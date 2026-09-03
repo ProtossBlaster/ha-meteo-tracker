@@ -48,7 +48,7 @@ latest released git tag (`vX.Y.Z`).
   often a missing "One Call by Call" subscription, or a key created in the last
   couple of hours) is written to the log instead of being replaced with a bare
   "Invalid API key", and the setup form says where to look.
-- README, in-app help and the call-budget table now cover both versions.
+- README, in-app help and the call-budget table now cover both versions, including that the daily allowance belongs to the OpenWeather account and is shared by every key and every installation using it — two Home Assistant instances cannot see each other and can exceed the free tier together.
 
 ### Measured against the live One Call 4.0 API on 2026-09-03
 - **Full parity with 3.0.** Both versions were fetched for the same point in the
