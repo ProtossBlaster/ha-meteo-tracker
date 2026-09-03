@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     DEGREE,
     PERCENTAGE,
     UnitOfLength,
@@ -40,7 +39,14 @@ from .weather_codes import (
 )
 
 MEASUREMENT = SensorStateClass.MEASUREMENT
-MICROGRAMS = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+try:  # HA 2026.7+
+    from homeassistant.const import UnitOfDensity
+
+    MICROGRAMS = UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
+except ImportError:  # HA < 2026.7, where UnitOfDensity does not exist yet
+    from homeassistant.const import (  # noqa: F401
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER as MICROGRAMS,
+    )
 
 MOON_PHASES = [
     "new_moon", "waxing_crescent", "first_quarter", "waxing_gibbous",

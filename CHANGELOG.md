@@ -10,6 +10,17 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-03
+
+### Fixed
+- **Home Assistant 2026.9 logged a deprecation warning on every start.**
+  `CONCENTRATION_MICROGRAMS_PER_CUBIC_METER` is deprecated and will be removed in
+  Core 2027.8; the air-quality sensors now use `UnitOfDensity.MICROGRAMS_PER_CUBIC_METER`
+  instead. `UnitOfDensity` does not exist before Core 2026.7, so the old constant is
+  kept as a fallback and the declared minimum (2024.12.0) is unchanged. The unit
+  string each installation reports is exactly what its own Core version reported
+  before, so no entity history is broken. Reported in #3.
+
 ## [0.2.1] - 2026-09-03
 
 Documentation only — no change to the integration's behaviour.
