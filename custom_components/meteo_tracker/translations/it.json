@@ -16,6 +16,16 @@
           "trackers": "Ogni device tracker selezionato avrà una propria entità meteo e una serie di sensori, seguendo la posizione attuale di quella persona.",
           "scan_interval_minutes": "Sulla One Call 3.0 un aggiornamento costa 1 chiamata per località distinta (5 min = ~288/giorno). Sulla 4.0 la stessa immagine viene ricomposta da 6 richieste, quindi il minimo è 10 minuti (~864/giorno). Chi si trova nello stesso posto continua a condividere un solo gruppo di chiamate."
         }
+      },
+      "reauth_confirm": {
+        "title": "Meteo Tracker: riconnessione a OpenWeather",
+        "description": "OpenWeather non accetta più questa chiave per One Call {version}.\n\nLascia il campo vuoto per riprovare la chiave che hai già: se il tuo account ora raggiunge solo l'altra versione di One Call, la configurazione ci si sposta mantenendo tutte le entità e il loro storico. Passare alla 4.0 costa sei richieste per aggiornamento invece di una, quindi l'intervallo viene portato a 10 minuti se è più corto.\n\nInserisci una chiave solo se vuoi sostituire quella in uso.",
+        "data": {
+          "api_key": "Nuova chiave API OpenWeather (facoltativa)"
+        },
+        "data_description": {
+          "api_key": "Lascia vuoto per tenere la chiave attuale e ricontrollare solo quale versione raggiunge."
+        }
       }
     },
     "error": {
@@ -26,6 +36,9 @@
       "interval_too_low_v4": "La One Call 4.0 richiede sei richieste per aggiornamento: sotto i 10 minuti si superano le 1000 chiamate/giorno gratuite. OpenWeather aggiorna la 4.0 ogni 10 minuti, quindi un intervallo più corto comprerebbe dati identici.",
       "interval_too_low": "L'intervallo di aggiornamento è più corto di quanto consenta questa versione dell'API.",
       "version_unavailable": "OpenWeather ha rifiutato la tua chiave per quella versione di One Call. Serve un abbonamento separato per ciascuna versione: attivarne una non estende l'altra. Anche un abbonamento attivato nelle ultime ore può non essere ancora operativo. Il testo esatto restituito da OpenWeather è nel log di Home Assistant."
+    },
+    "abort": {
+      "reauth_successful": "Riconnessione riuscita. La configurazione ha mantenuto entità e storico."
     }
   },
   "options": {

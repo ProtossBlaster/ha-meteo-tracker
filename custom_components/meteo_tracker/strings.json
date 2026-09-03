@@ -16,6 +16,16 @@
           "trackers": "Each selected device tracker gets its own weather entity and sensor set, following that person's current location.",
           "scan_interval_minutes": "On One Call 3.0 a refresh costs 1 call per distinct location (5 min = ~288/day). On 4.0 the same picture is rebuilt from 6 requests, so the minimum is 10 minutes (~864/day). People standing together still share one set of calls."
         }
+      },
+      "reauth_confirm": {
+        "title": "Meteo Tracker: reconnect to OpenWeather",
+        "description": "OpenWeather is no longer accepting this key for One Call {version}.\n\nLeave the field empty to re-check the key you already have — if your account can now only reach the other One Call version, this entry moves to it and keeps all of its entities and their history. Moving to 4.0 costs six requests per refresh instead of one, so the refresh interval is raised to 10 minutes if it is shorter.\n\nEnter a key only if you want to replace the one in use.",
+        "data": {
+          "api_key": "New OpenWeather API key (optional)"
+        },
+        "data_description": {
+          "api_key": "Leave empty to keep the current key and only re-check which version it reaches."
+        }
       }
     },
     "error": {
@@ -26,6 +36,9 @@
       "interval_too_low_v4": "One Call 4.0 needs six requests per refresh, so anything under 10 minutes runs past the 1000 calls/day free tier. OpenWeather only updates 4.0 every 10 minutes, so a shorter interval would buy duplicate data.",
       "interval_too_low": "Refresh interval is shorter than this API version allows.",
       "version_unavailable": "OpenWeather refused your key for that One Call version. You need a separate subscription for each version — subscribing to one does not extend to the other. A subscription activated in the last couple of hours may also not be live yet. The exact wording OpenWeather returned is in the Home Assistant log."
+    },
+    "abort": {
+      "reauth_successful": "Reconnected. The entry kept its entities and history."
     }
   },
   "options": {

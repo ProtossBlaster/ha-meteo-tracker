@@ -67,6 +67,14 @@ remembers the answer, so there is nothing to choose.
   switched off, and it is the cheaper of the two here — one request per refresh
   against six — so Meteo Tracker prefers it whenever it works.
 
+> **If OpenWeather ever stops serving One Call 3.0**, entries using it will fail
+> with an authentication error and Home Assistant will ask you to reconnect.
+> Reconnecting re-checks your key, moves the entry to whichever version the key
+> still reaches, and keeps every entity and all of its history — you do not need
+> to remove and re-add the integration. No retirement of 3.0 has been announced;
+> OpenWeather's migration guide says only that it "isn't being switched off as
+> part of this release".
+
 Already set up and want to move? **Settings → Devices & Services → Meteo Tracker →
 Configure** has a *One Call API version* field. Subscribe to the other product on
 openweathermap.org first — a subscription to one version does not extend to the

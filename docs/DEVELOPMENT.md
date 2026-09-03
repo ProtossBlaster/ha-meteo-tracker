@@ -21,7 +21,7 @@ endpoints are fetched and reassembled in `onecall_v4.py`, so no platform knows t
 | `onecall_v4.py` | **Pure** (no HA, no aiohttp) — rebuilds the 3.0 payload shape out of One Call 4.0's six endpoints. Unit-tested in CI. |
 | `coordinator.py` | `DataUpdateCoordinator`: resolves each tracker's lat/lon, **dedupes** by rounded coords, fetches per location. |
 | `__init__.py` | Setup/unload, builds client + coordinator, forwards platforms, options-reload listener. |
-| `config_flow.py` | UI config (api_key + trackers + interval + language) and options flow. Initial values go in `entry.data`; options override. |
+| `config_flow.py` | UI config (api_key + trackers + interval + language), **reauth** (re-probes the key, carries the entry across One Call versions, keeps the entry id so history survives) and options flow (incl. changing the One Call version). Initial values go in `entry.data`; options override. |
 | `entity.py` | `MeteoTrackerEntity` base: per-person device, availability, `_onecall`/`_air` accessors. |
 | `weather.py` | `weather.<person>` entity: current props + hourly/daily/twice-daily forecasts. |
 | `sensor.py` | `SENSORS` descriptor table (40 sensors) + entity. Each has a `value_fn(tracker_data)`. |

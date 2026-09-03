@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -216,6 +217,91 @@ class MeteoTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="user", data_schema=schema, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """OpenWeather stopped accepting the key this entry was set up with.
+
+        This is the path every 3.0 user lands on the day OpenWeather stops
+        serving 3.0, so it has to be able to carry the entry across to 4.0.
+        """
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Re-probe the key and, if the version changed, move the entry to it.
+
+        The existing entry is updated rather than replaced: every entity's unique
+        ID is built from the entry id, so a new entry would hand all 40-odd
+        entities new identities and start their history over.
+        """
+        entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        stored = entry.data.get(CONF_API_VERSION, DEFAULT_API_VERSION)
+
+        if user_input is not None:
+            api_key = user_input.get(CONF_API_KEY) or entry.data[CONF_API_KEY]
+            version, error = await _detect_version(self.hass, api_key)
+            if error:
+                errors["base"] = error
+            else:
+                options = dict(entry.options)
+                floor = min_interval_for(version)
+                interval = int(
+                    options.get(
+                        CONF_SCAN_INTERVAL_MINUTES,
+                        entry.data.get(
+                            CONF_SCAN_INTERVAL_MINUTES,
+                            DEFAULT_SCAN_INTERVAL_MINUTES,
+                        ),
+                    )
+                )
+                if version != stored:
+                    _LOGGER.warning(
+                        "Meteo Tracker entry %s moves from One Call %s to %s: "
+                        "OpenWeather no longer accepts this key for %s",
+                        entry.title,
+                        stored,
+                        version,
+                        stored,
+                    )
+                if interval < floor:
+                    # Raise it here as well as in setup, so the options screen
+                    # shows the interval actually being used.
+                    options[CONF_SCAN_INTERVAL_MINUTES] = floor
+                    _LOGGER.warning(
+                        "Refresh interval raised from %d to %d min, the minimum "
+                        "One Call %s can afford",
+                        interval,
+                        floor,
+                        version,
+                    )
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={
+                        CONF_API_KEY: api_key,
+                        CONF_API_VERSION: version,
+                    },
+                    options=options,
+                    reason="reauth_successful",
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_API_KEY, default=""): selector.TextSelector(
+                        selector.TextSelectorConfig(
+                            type=selector.TextSelectorType.PASSWORD
+                        )
+                    )
+                }
+            ),
+            errors=errors,
+            description_placeholders={"version": stored},
         )
 
     @staticmethod

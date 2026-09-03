@@ -21,6 +21,16 @@ latest released git tag (`vX.Y.Z`).
   behaves exactly as before.
 
 ### Added
+- **Recovery when OpenWeather stops accepting a key.** The integration had no
+  reauthentication step, so a key that stopped working left the entry broken with
+  no way back: Home Assistant asks the config flow for `async_step_reauth`, and
+  without it the recovery never starts. The only escape was deleting and re-adding
+  the integration — and because every entity's unique ID derives from the entry
+  id, that lost all of their history. There is now a reauth step that re-probes
+  the key, carries the entry to whichever One Call version the key still reaches,
+  raises the refresh interval if the new version needs it, and **updates the
+  existing entry**, so entities and history survive. This is the path every 3.0
+  user would take on the day OpenWeather stops serving 3.0.
 - **Move an existing entry between One Call versions.** The version is now a field
   in the integration's options. Detection still picks it when the entry is created,
   but a user who later subscribes to the other product can switch without deleting
