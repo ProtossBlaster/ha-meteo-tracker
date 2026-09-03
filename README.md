@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.12%2B-41BDF5.svg" alt="HA min version">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.1.3-blue.svg" alt="Version"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.2.0-blue.svg" alt="Version"></a>
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT">
 </p>
 
@@ -85,6 +85,24 @@ saved, so a version you have not bought is refused instead of breaking the entry
 > window OpenWeather refuses it exactly as it refuses an unsubscribed key. If
 > setup fails right after you created the key, wait and try again — the reason
 > OpenWeather actually gave is written to the Home Assistant log.
+
+#### What actually changes between 3.0 and 4.0
+
+Measured by fetching both for the same point in the same minute and pushing each
+through all 40 sensors:
+
+| | One Call 3.0 | One Call 4.0 |
+|---|---|---|
+| Sensors that lose a value | — | **none** |
+| Current / minute / hourly / daily | 14 fields · 60 · 48 · 8 | identical |
+| Weather alert text | English | **the language you configured** |
+| Weather alert name (`event`) | e.g. *Yellow High-temperature Warning* | returned empty; the alert's own tag is used instead |
+| Requests per refresh | **1** | **6**, plus one per active alert |
+| Shortest refresh interval | 1 min | **10 min** |
+
+So migrating buys one thing — alerts you can read in your own language — at six
+times the requests. While your 3.0 subscription works, there is no other reason to
+move; when it stops, reconnecting carries you across without losing anything.
 
 #### 💰 Call-budget cheat sheet
 
@@ -223,7 +241,16 @@ person's entities become *unavailable* until coordinates are known again.
 
 ## 🛠️ Troubleshooting
 
-- **“Invalid API key”** right after creating the key → wait up to ~2 h for activation.
+- **The key is refused at setup.** OpenWeather returns the same 401 for three
+  different causes, so the integration writes its exact wording to the Home
+  Assistant log — look there first. The three are: the key is genuinely wrong; the
+  key is fine but the **“One Call by Call” subscription** was never bought (each
+  version needs its own — subscribing to 4.0 does not extend 3.0, or the reverse);
+  or the key was created in the **last ~2 hours** and is not active yet.
+- **The entry stopped working and asks you to reconnect.** OpenWeather is no longer
+  accepting the key for the version this entry uses. Reconnecting re-checks it and,
+  if your account now reaches only the other version, moves the entry there —
+  keeping every entity and all of its history.
 - **Entities unavailable** → the tracker has no coordinates (see above), or the
   daily call limit was hit. Lower the refresh frequency or check OpenWeather usage.
 - **Diagnostics** → the integration's *Download diagnostics* redacts your API key
@@ -246,8 +273,8 @@ pytest tests/
 
 **Meteo Tracker** dà a **ogni persona il proprio meteo**, in base a dove si trova
 davvero. Scegli uno o più `device_tracker`: il componente segue la posizione GPS di
-ciascuno e scarica un quadro meteo completo da **OpenWeather One Call API 3.0**,
-aggiornato **ogni 5 minuti**.
+ciascuno e scarica un quadro meteo completo dalle **API OpenWeather One Call**
+(3.0 o 4.0, rilevata da sola), aggiornato **ogni 10 minuti**.
 
 **Caratteristiche**
 
@@ -270,11 +297,23 @@ che hanno già un abbonamento 3.0 continuano a usarlo. Meteo Tracker lo rileva d
 in fase di configurazione e preferisce la 3.0 quando funziona, perché costa meno.
 
 **Budget chiamate**: sulla **3.0** un aggiornamento costa **1 chiamata** per posizione
-distinta → a 5 minuti sono ~288/giorno e restano gratis fino a **3 posizioni**. Sulla
-**4.0** la stessa immagine si ricompone da **6 richieste** (più una per ogni allerta
-attiva), quindi l'intervallo minimo è **10 minuti**: sono ~864 chiamate/giorno per
-**una** posizione. Persone nello stesso luogo condividono le stesse chiamate; per più
-persone in città diverse, alza l'intervallo.
+distinta; sulla **4.0** la stessa immagine si ricompone da **6 richieste**, più una per
+ogni allerta attiva, e l'intervallo minimo è **10 minuti**. Persone nello stesso luogo
+condividono le stesse chiamate. 🔴 **Il tetto di 1000 chiamate/giorno appartiene
+all'account OpenWeather, non all'installazione**: due Home Assistant che usano lo stesso
+account attingono allo stesso tetto e non si vedono fra loro. Le tabelle complete sono
+sopra, e **le stesse tabelle compaiono dentro l'integrazione**, sia quando la aggiungi
+sia in *Configura*, con i numeri della tua configurazione.
+
+**Passare dalla 3.0 alla 4.0**: *Impostazioni → Dispositivi e servizi → Meteo Tracker →
+Configura → Versione delle API One Call*. Va comprato prima l'abbonamento all'altra
+versione — averne una non estende l'altra — e il passaggio viene verificato con
+OpenWeather prima di essere salvato. Entità e storico restano. Migrare conviene solo se
+serve: si guadagnano le **allerte nella propria lingua** e si paga sei volte le chiamate.
+
+**Se un giorno la 3.0 smettesse**: Home Assistant chiede di riconnettersi, e la
+riconnessione porta la configurazione sulla versione che la chiave raggiunge ancora,
+**mantenendo entità e storico**. Nessuna dismissione è stata annunciata da OpenWeather.
 
 **Installazione**: HACS → *Custom repositories* → aggiungi questo repo come
 *Integration*, installa, riavvia. Poi *Impostazioni → Dispositivi e servizi →
