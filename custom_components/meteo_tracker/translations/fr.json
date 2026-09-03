@@ -1,0 +1,132 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Meteo Tracker",
+        "description": "Météo par personne, basée sur la position en temps réel de chaque appareil suivi, via l’API OpenWeather One Call.\n\n**Avant de choisir un intervalle d’actualisation.** La version de One Call accessible avec votre clé est détectée lorsque vous validez ce formulaire. Les comptes créés récemment peuvent uniquement souscrire à la version **4.0**, où une actualisation coûte **six** requêtes au lieu d’une — avec la version 3.0, divisez ces nombres par six.\n\nRequêtes quotidiennes avec la version 4.0 pour **une localisation**, avec en haut le nombre d’installations Home Assistant partageant votre compte OpenWeather — ✅ dans la limite gratuite de {free}/jour, ⚠️ au-delà :\n\n{budget}\n\nMultipliez par le nombre de localisations distinctes suivies : les personnes se trouvant au même endroit partagent le même ensemble de requêtes, une famille à la maison compte donc comme une seule localisation. La limite s’applique au **compte**, et deux installations ne peuvent pas se voir mutuellement — chacune peut respecter son propre minimum alors que leur total dépasse la limite.",
+        "data": {
+          "name": "Nom",
+          "api_key": "Clé API OpenWeather",
+          "trackers": "Personnes à suivre (appareils suivis)",
+          "scan_interval_minutes": "Intervalle d’actualisation (minutes)",
+          "language": "Langue des descriptions météo"
+        },
+        "data_description": {
+          "api_key": "Créez une clé gratuite sur openweathermap.org et souscrivez à « One Call by Call » (1000 appels/jour gratuits avec une limite de dépenses). La version de One Call accessible avec votre clé est détectée ici : les comptes créés depuis qu’OpenWeather ne commercialise plus la version 3.0 obtiennent la 4.0, tandis que les anciennes clés restent en 3.0.",
+          "trackers": "Chaque appareil suivi sélectionné dispose de sa propre entité météo et de ses propres capteurs, suivant la position actuelle de cette personne.",
+          "scan_interval_minutes": "Avec One Call 3.0, une actualisation coûte 1 appel par localisation distincte (5 min = ~288/jour). Avec la 4.0, les mêmes données sont reconstituées à partir de 6 requêtes, l’intervalle minimal est donc de 10 minutes (~864/jour). Les personnes se trouvant au même endroit partagent toujours le même ensemble d’appels."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Meteo Tracker : reconnexion à OpenWeather",
+        "description": "OpenWeather n’accepte plus cette clé pour One Call {version}.\n\nLaissez le champ vide pour vérifier à nouveau la clé actuelle — si votre compte ne peut désormais accéder qu’à l’autre version de One Call, cette entrée basculera vers celle-ci tout en conservant ses entités et leur historique. Passer à la version 4.0 coûte six requêtes par actualisation au lieu d’une, l’intervalle d’actualisation sera donc porté à 10 minutes s’il est inférieur.\n\nSaisissez une clé uniquement si vous souhaitez remplacer celle actuellement utilisée.",
+        "data": {
+          "api_key": "Nouvelle clé API OpenWeather (facultatif)"
+        },
+        "data_description": {
+          "api_key": "Laissez ce champ vide pour conserver la clé actuelle et vérifier uniquement la version à laquelle elle donne accès."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "OpenWeather a refusé cette clé. Généralement, la clé elle-même est valide mais l’abonnement « One Call by Call » est manquant, ou la clé a été créée au cours des dernières heures et n’est pas encore active. Le message exact renvoyé par OpenWeather est disponible dans le journal de Home Assistant.",
+      "cannot_connect": "Impossible de joindre OpenWeather. Vérifiez votre connexion Internet.",
+      "rate_limited": "OpenWeather a refusé la requête : limite d’appels atteinte.",
+      "no_trackers": "Sélectionnez au moins un appareil suivi.",
+      "interval_too_low_v4": "One Call 4.0 nécessite six requêtes par actualisation. Un intervalle inférieur à 10 minutes dépasse donc la limite gratuite de 1000 appels/jour. OpenWeather ne met à jour les données 4.0 que toutes les 10 minutes, un intervalle plus court ne ferait donc que récupérer des données identiques.",
+      "interval_too_low": "L’intervalle d’actualisation est inférieur à celui autorisé par cette version de l’API.",
+      "version_unavailable": "OpenWeather a refusé votre clé pour cette version de One Call. Un abonnement distinct est nécessaire pour chaque version — souscrire à l’une ne donne pas accès à l’autre. Un abonnement activé au cours des dernières heures peut également ne pas être encore opérationnel. Le message exact renvoyé par OpenWeather est disponible dans le journal de Home Assistant."
+    },
+    "abort": {
+      "reauth_successful": "Reconnexion réussie. L’entrée a conservé ses entités et leur historique."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options de Meteo Tracker",
+        "description": "Cette entrée utilise **One Call {version}**. Requêtes par actualisation et par localisation distincte : **{per_refresh}**. Localisations distinctes actuellement suivies : **{locations}**.\n\nRequêtes One Call quotidiennes — intervalle d’actualisation sur le côté, **nombre d’installations Home Assistant partageant votre compte OpenWeather** en haut. ✅ dans la limite gratuite de {free}/jour, ⚠️ au-delà :\n\n{budget}\n\nLa limite s’applique au **compte**, et non à cette installation : chaque clé et tout ce qui les utilise puisent dans les mêmes {free}, et deux installations ne peuvent pas se voir mutuellement — chacune peut respecter son propre minimum alors que leur total dépasse la limite. Avec la version 4.0, chaque alerte météo coûte une requête supplémentaire. La qualité de l’air utilise une API gratuite distincte et n’est pas comptabilisée.",
+        "data": {
+          "trackers": "Personnes à suivre (appareils suivis)",
+          "scan_interval_minutes": "Intervalle d’actualisation (minutes)",
+          "language": "Langue des descriptions météo",
+          "api_version": "Version de l’API One Call"
+        },
+        "data_description": {
+          "scan_interval_minutes": "Avec One Call 3.0, une actualisation coûte 1 appel par localisation distincte (5 min = ~288/jour). Avec la 4.0, les mêmes données sont reconstituées à partir de 6 requêtes, l’intervalle minimal est donc de 10 minutes (~864/jour). Les personnes se trouvant au même endroit partagent toujours le même ensemble d’appels.",
+          "api_version": "Produit OpenWeather utilisé par cette entrée. Il est détecté lors de la création de l’entrée ; modifiez-le ici si vous avez depuis souscrit à l’autre version. Le changement est vérifié auprès d’OpenWeather avant d’être enregistré, et la version 4.0 nécessite un intervalle d’actualisation d’au moins 10 minutes."
+        }
+      }
+    },
+    "error": {
+      "no_trackers": "Sélectionnez au moins un appareil suivi.",
+      "interval_too_low_v4": "One Call 4.0 nécessite six requêtes par actualisation. Un intervalle inférieur à 10 minutes dépasse donc la limite gratuite de 1000 appels/jour. OpenWeather ne met à jour les données 4.0 que toutes les 10 minutes, un intervalle plus court ne ferait donc que récupérer des données identiques.",
+      "interval_too_low": "L’intervalle d’actualisation est inférieur à celui autorisé par cette version de l’API.",
+      "version_unavailable": "OpenWeather a refusé votre clé pour cette version de One Call. Un abonnement distinct est nécessaire pour chaque version — souscrire à l’une ne donne pas accès à l’autre. Un abonnement activé au cours des dernières heures peut également ne pas être encore opérationnel. Le message exact renvoyé par OpenWeather est disponible dans le journal de Home Assistant."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": {"name": "Température"},
+      "apparent_temperature": {"name": "Température ressentie"},
+      "temp_min_today": {"name": "Température minimale aujourd’hui"},
+      "temp_max_today": {"name": "Température maximale aujourd’hui"},
+      "pressure": {"name": "Pression"},
+      "humidity": {"name": "Humidité"},
+      "dew_point": {"name": "Point de rosée"},
+      "uv_index": {"name": "Indice UV"},
+      "cloud_coverage": {"name": "Nébulosité"},
+      "visibility": {"name": "Visibilité"},
+      "wind_speed": {"name": "Vitesse du vent"},
+      "wind_gust": {"name": "Rafales de vent"},
+      "wind_bearing": {"name": "Direction du vent (degrés)"},
+      "wind_direction": {
+        "name": "Direction du vent",
+        "state": {
+          "n": "Nord", "nne": "Nord-nord-est", "ne": "Nord-est", "ene": "Est-nord-est", "e": "Est", "ese": "Est-sud-est", "se": "Sud-est", "sse": "Sud-sud-est", "s": "Sud", "ssw": "Sud-sud-ouest", "sw": "Sud-ouest", "wsw": "Ouest-sud-ouest", "w": "Ouest", "wnw": "Ouest-nord-ouest", "nw": "Nord-ouest", "nnw": "Nord-nord-ouest"
+        }
+      },
+      "precipitation_1h": {"name": "Précipitations (dernière heure)"},
+      "precipitation_probability": {"name": "Probabilité de précipitations"},
+      "precipitation_next_hour": {"name": "Précipitations (prochaine heure)"},
+      "rain_today": {"name": "Pluie aujourd’hui"},
+      "snow_today": {"name": "Neige aujourd’hui"},
+      "condition": {"name": "Conditions météo"},
+      "weather_description": {"name": "Description météo"},
+      "weather_summary": {"name": "Résumé quotidien"},
+      "sunrise": {"name": "Lever du soleil"},
+      "sunset": {"name": "Coucher du soleil"},
+      "moonrise": {"name": "Lever de la lune"},
+      "moonset": {"name": "Coucher de la lune"},
+      "moon_phase": {
+        "name": "Phase de la lune",
+        "state": {
+          "new_moon": "Nouvelle lune", "waxing_crescent": "Premier croissant", "first_quarter": "Premier quartier", "waxing_gibbous": "Gibbeuse croissante", "full_moon": "Pleine lune", "waning_gibbous": "Gibbeuse décroissante", "last_quarter": "Dernier quartier", "waning_crescent": "Dernier croissant"
+        }
+      },
+      "moon_phase_value": {"name": "Valeur de la phase de la lune"},
+      "air_quality_index": {"name": "Indice de qualité de l’air"},
+      "air_quality_label": {
+        "name": "Qualité de l’air",
+        "state": {"good": "Bonne", "fair": "Correcte", "moderate": "Moyenne", "poor": "Mauvaise", "very_poor": "Très mauvaise"}
+      },
+      "pm25": {"name": "PM2.5"},
+      "pm10": {"name": "PM10"},
+      "ozone": {"name": "Ozone"},
+      "nitrogen_dioxide": {"name": "Dioxyde d’azote"},
+      "sulphur_dioxide": {"name": "Dioxyde de soufre"},
+      "carbon_monoxide": {"name": "Monoxyde de carbone"},
+      "nitrogen_monoxide": {"name": "Monoxyde d’azote"},
+      "ammonia": {"name": "Ammoniac"},
+      "location": {"name": "Localisation"},
+      "last_measured": {"name": "Dernière mesure"}
+    },
+    "binary_sensor": {
+      "weather_alert": {"name": "Alerte météo"},
+      "precipitation_expected": {"name": "Précipitations attendues"}
+    },
+    "button": {
+      "refresh": {"name": "Actualiser"}
+    }
+  }
+}
