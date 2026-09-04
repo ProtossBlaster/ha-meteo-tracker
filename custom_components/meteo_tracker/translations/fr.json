@@ -94,6 +94,7 @@
       "condition": {"name": "Conditions météo"},
       "weather_description": {"name": "Description météo"},
       "weather_summary": {"name": "Résumé quotidien"},
+      "weather_alert_type": {"name": "Type d'alerte météo"},
       "sunrise": {"name": "Lever du soleil"},
       "sunset": {"name": "Coucher du soleil"},
       "moonrise": {"name": "Lever de la lune"},

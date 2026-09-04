@@ -151,6 +151,9 @@
       "weather_summary": {
         "name": "Riepilogo giornaliero"
       },
+      "weather_alert_type": {
+        "name": "Tipo di allerta meteo"
+      },
       "sunrise": {
         "name": "Alba"
       },

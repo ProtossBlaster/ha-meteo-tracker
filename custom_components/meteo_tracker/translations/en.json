@@ -151,6 +151,9 @@
       "weather_summary": {
         "name": "Daily summary"
       },
+      "weather_alert_type": {
+        "name": "Weather alert type"
+      },
       "sunrise": {
         "name": "Sunrise"
       },

@@ -31,6 +31,7 @@ from . import MeteoTrackerConfigEntry
 from .entity import MeteoTrackerEntity
 from .weather import _precip
 from .weather_codes import (
+    alert_tag,
     aqi_label,
     compact_summary,
     map_condition,
@@ -75,6 +76,16 @@ def _today(d: dict) -> dict:
 def _hour0(d: dict) -> dict:
     hourly = (d.get("onecall") or {}).get("hourly") or []
     return hourly[0] if hourly else {}
+
+
+def _alert_type(d: dict) -> str | None:
+    """The kind of alert in force, or None when none is.
+
+    The binary sensor answers "is there an alert"; this answers "of what kind",
+    as a state rather than an attribute, so it can be put on a card and used as
+    a trigger without a template (#5).
+    """
+    return alert_tag((d.get("onecall") or {}).get("alerts"))
 
 
 def _air_main(d: dict) -> dict:
@@ -281,6 +292,11 @@ SENSORS: tuple[MeteoSensorDescription, ...] = (
         key="weather_summary",
         icon="mdi:text-long",
         value_fn=lambda d: compact_summary(_today(d)),
+    ),
+    MeteoSensorDescription(
+        key="weather_alert_type",
+        icon="mdi:alert",
+        value_fn=_alert_type,
     ),
     # --- sun & moon -------------------------------------------------------
     MeteoSensorDescription(

@@ -107,3 +107,40 @@ class TestMoonPhase:
 
     def test_none(self):
         assert wc.moon_phase_name(None) is None
+
+
+class TestAlertTag:
+    """`tags[0]` of the first alert that has one — the state of the alert-type sensor.
+
+    `tags` rather than `event` because `event` comes back empty on One Call 4.0:
+    measured 2026-09-04 against live alerts, 14 out of 14, six national services.
+    """
+
+    def test_first_tag_of_the_first_alert(self):
+        alerts = [
+            {"sender_name": "METEO-FRANCE", "tags": ["Extreme high temperature"]},
+            {"sender_name": "METEO-FRANCE", "tags": ["Wind"]},
+        ]
+        assert wc.alert_tag(alerts) == "Extreme high temperature"
+
+    def test_no_alerts(self):
+        assert wc.alert_tag([]) is None
+        assert wc.alert_tag(None) is None
+
+    def test_an_alert_without_tags_does_not_hide_one_that_has_them(self):
+        """4.0 omits `tags` on an alert that carries none; the next alert still counts."""
+        alerts = [{"sender_name": "DWD", "event": ""}, {"tags": ["Wind"]}]
+        assert wc.alert_tag(alerts) == "Wind"
+
+    def test_empty_and_blank_tags_are_not_a_state(self):
+        assert wc.alert_tag([{"tags": []}]) is None
+        assert wc.alert_tag([{"tags": ["   "]}]) is None
+        assert wc.alert_tag([{"tags": [""]}, {"tags": ["Flood"]}]) == "Flood"
+
+    def test_a_malformed_payload_never_raises(self):
+        assert wc.alert_tag([{"tags": "Wind"}]) is None      # string, not a list
+        assert wc.alert_tag([None, {"tags": ["Fog"]}]) == "Fog"
+        assert wc.alert_tag("nonsense") is None
+
+    def test_a_non_string_tag_is_read_as_text(self):
+        assert wc.alert_tag([{"tags": [42]}]) == "42"

@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.12%2B-41BDF5.svg" alt="HA min version">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.2.3-blue.svg" alt="Version"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.2.4-blue.svg" alt="Version"></a>
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT">
 </p>
 
@@ -212,7 +212,7 @@ twice-daily** forecasts.
 | **Atmosphere** | Pressure, Humidity, Cloud coverage, Visibility, UV index |
 | **Wind** | Wind speed, Wind gust, Wind bearing (°), Wind direction (compass) |
 | **Precipitation** | Last hour, Next hour, Probability, Rain today, Snow today |
-| **Descriptive** | Condition, Weather description, Daily summary |
+| **Descriptive** | Condition, Weather description, Daily summary, Weather alert type |
 | **Sun & moon** | Sunrise, Sunset, Moonrise, Moonset, Moon phase |
 | **Air quality** | AQI (index + label), PM2.5, PM10, O₃, NO₂, SO₂, CO, NO, NH₃ |
 | **Diagnostic** | Location, Last measured, Moon phase value |
@@ -221,6 +221,14 @@ twice-daily** forecasts.
 
 - **Weather alert** — `on` when a government alert is active; the alert details
   (event, sender, start/end, description, tags) are in the entity attributes.
+  The kind of alert is also a state of its own — see **Weather alert type** above,
+  which carries `tags[0]` verbatim (`Wind`, `Extreme high temperature`, …) so it can
+  go straight on a card or trigger an automation without a template. It reads the
+  first alert that carries a tag, and is unknown when none is active; when several
+  alerts overlap, the binary sensor's `alerts` attribute still lists them all.
+  `tags` rather than `event` because on One Call 4.0 `event` arrives empty — measured
+  2026-09-04 on 14 live alerts from six national services — while `tags` is present
+  and identical on 3.0 and 4.0 alike.
 - **Precipitation expected** — `on` when rain/snow is expected within the next hour.
 
 ### Button

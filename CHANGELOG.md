@@ -10,6 +10,23 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-09-04
+
+### Added
+- **Weather alert type sensor.** The kind of alert in force is now a state of its own,
+  `sensor.weather_alert_type`, instead of existing only inside the weather-alert binary sensor's
+  attributes — so it can go straight on a card or trigger an automation without a template
+  (asked for by @minimicro34 in #5). It carries the alert's first `tags` value verbatim
+  (`Wind`, `Extreme high temperature`, …), reads the first alert that has one, and is unknown
+  while no alert is active; overlapping alerts are all still listed in the binary sensor's
+  `alerts` attribute.
+- `tags` and not `event`, because on **One Call 4.0 `event` arrives empty**: measured on
+  2026-09-04 against 14 live alerts from six national services — Italy, Germany, Spain, Portugal,
+  the Netherlands and France — every one of them empty, while the same alerts read on 3.0 are
+  named. `tags` is present and identically shaped on both versions. The state itself is not
+  translated: OpenWeather publishes no closed list of tags, so an enum would go `unknown` the
+  first time an unlisted one appeared, and silently. The entity name is translated (EN/IT/FR).
+
 ## [0.2.3] - 2026-09-04
 
 ### Added

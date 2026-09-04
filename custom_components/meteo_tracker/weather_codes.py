@@ -176,3 +176,34 @@ def moon_phase_name(value: float | None) -> str | None:
     if v < 0.8125:
         return "last_quarter"
     return "waning_crescent"
+
+
+def alert_tag(alerts: object) -> str | None:
+    """The kind of weather alert in force: ``tags[0]`` of the first alert carrying one.
+
+    ``tags`` and not ``event``, on purpose. Measured against the live API on
+    2026-09-04: on One Call **4.0** ``event`` comes back empty — 14 live alerts,
+    six national services, every one of them — while the same alerts on 3.0 are
+    named. ``tags`` is the one field that arrives present, identical and
+    identically shaped on both versions and from every service seen so far
+    (``["Wind"]``, ``["Extreme high temperature"]``).
+
+    Returned verbatim rather than mapped to a slug: OpenWeather publishes no
+    closed list of tags, so an enum would go ``unknown`` the first time a value
+    outside our list appeared — and we would not learn of it. An alert whose
+    ``tags`` is absent or empty is skipped rather than blanking the state, since
+    a second alert may well carry one.
+    """
+    if not isinstance(alerts, (list, tuple)):
+        return None
+    for alert in alerts:
+        if not isinstance(alert, dict):
+            continue
+        tags = alert.get("tags")
+        if not isinstance(tags, (list, tuple)):
+            continue
+        for tag in tags:
+            text = str(tag).strip()
+            if text:
+                return text
+    return None
