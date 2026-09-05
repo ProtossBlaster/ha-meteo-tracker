@@ -152,7 +152,26 @@
         "name": "Daily summary"
       },
       "weather_alert_type": {
-        "name": "Weather alert type"
+        "name": "Weather alert type",
+        "state": {
+          "Coastal event": "Coastal event",
+          "Extreme low temperature": "Extreme low temperature",
+          "Extreme high temperature": "Extreme high temperature",
+          "Wind": "Wind",
+          "Flood": "Flood",
+          "Sand dust": "Sand dust",
+          "Rain": "Rain",
+          "Fire warning": "Fire warning",
+          "Marine event": "Marine event",
+          "Avalanches": "Avalanches",
+          "Fog": "Fog",
+          "Air quality": "Air quality",
+          "Tornado": "Tornado",
+          "Cyclone": "Cyclone",
+          "Snow ice": "Snow ice",
+          "Thunderstorm": "Thunderstorm",
+          "Hail": "Hail"
+        }
       },
       "sunrise": {
         "name": "Sunrise"
