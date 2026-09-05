@@ -10,6 +10,11 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-05
+
+Upgrade instructions, the complete state mapping and rollback notes:
+[v0.3.0 release guide](docs/releases/v0.3.0.md).
+
 ### Changed
 - **Weather alert type states:** the 17 known OpenWeather tags now use stable
   lowercase underscore keys, allowing EN/IT/FR display translations that pass

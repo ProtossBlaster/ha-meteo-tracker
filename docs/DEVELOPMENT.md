@@ -85,22 +85,16 @@ endpoints are fetched and reassembled in `onecall_v4.py`, so no platform knows t
 
 ## 4. Validate before every release
 
-Pure-logic tests (no HA needed):
+Pure-logic tests (no HA needed; use an environment with pytest installed):
 ```bash
-python3 - <<'PY'
-import sys, pathlib; sys.path.insert(0, "custom_components/meteo_tracker"); sys.path.insert(0, "tests")
-import test_weather_codes as t
-for c in [getattr(t,n) for n in dir(t) if n.startswith("Test")]:
-    i=c(); [getattr(i,m)() for m in dir(i) if m.startswith("test_")]
-print("pure tests OK")
-PY
+python3 -m pytest tests/ -q
 ```
 
-Import + data-flow against the **real HA image** (catches every device-class / unit /
-API drift):
+Import check against the **real HA image** (catches import-time incompatibilities;
+it does not replace runtime or UI testing):
 ```bash
-docker run --rm -i --entrypoint python -e PYTHONPATH=/pkg \
-  -v "$PWD/custom_components:/pkg" ghcr.io/home-assistant/home-assistant:stable - <<'PY'
+docker run --rm -i --entrypoint python -e PYTHONPATH=/pkg -e PYTHONDONTWRITEBYTECODE=1 \
+  -v "$PWD/custom_components:/pkg:ro" ghcr.io/home-assistant/home-assistant:stable - <<'PY'
 import importlib
 for m in ["meteo_tracker","meteo_tracker.weather","meteo_tracker.sensor",
           "meteo_tracker.binary_sensor","meteo_tracker.config_flow",
@@ -108,9 +102,6 @@ for m in ["meteo_tracker","meteo_tracker.weather","meteo_tracker.sensor",
     importlib.import_module(m); print("OK", m)
 from meteo_tracker.sensor import SENSORS; print("sensors:", len(SENSORS))
 PY
-# clean up root-owned __pycache__ the mount leaves behind:
-docker run --rm --entrypoint sh -v "$PWD/custom_components:/pkg" \
-  ghcr.io/home-assistant/home-assistant:stable -c 'find /pkg -name __pycache__ -prune -exec rm -rf {} +'
 ```
 
 CI runs the same spirit on every push: **HACS + hassfest + pytest**
@@ -122,6 +113,8 @@ CI runs the same spirit on every push: **HACS + hassfest + pytest**
 
 1. Bump `version` in `manifest.json` (SemVer, = the new tag).
 2. Add a dated section to `CHANGELOG.md` and update the version badge in `README.md`.
+   Update `info.md` and add `docs/releases/vX.Y.Z.md` with compatibility, upgrade,
+   validation and rollback notes; use these notes for the GitHub release.
 3. Run the validation in §4 (green).
 4. `git commit` → `git push` (with Silvio's OK).
 5. `gh release create vX.Y.Z --target main --title "…" --notes "…"` (creates the tag;

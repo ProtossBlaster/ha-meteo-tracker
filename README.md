@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.12%2B-41BDF5.svg" alt="HA min version">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.2.4-blue.svg" alt="Version"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.3.0-blue.svg" alt="Version"></a>
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT">
 </p>
 
@@ -18,6 +18,14 @@ weather picture from the **OpenWeather One Call API** — refreshed **every 10 m
 by default (see the call budget below).
 
 > 🇮🇹 *Versione italiana più in basso → [Italiano](#-italiano).*
+
+> **Updating to v0.3.0:** known weather alert states now use stable lowercase keys.
+> See the [release and upgrade guide](docs/releases/v0.3.0.md) for all 17 mappings,
+> automation examples and rollback instructions. Entity IDs and configuration are preserved.
+>
+> **Aggiornamento a v0.3.0:** i tipi di allerta noti usano nuovi valori tecnici
+> minuscoli. La [guida alla release](docs/releases/v0.3.0.md#italiano) spiega come
+> aggiornare eventuali automazioni; entità e configurazione restano invariate.
 
 ---
 

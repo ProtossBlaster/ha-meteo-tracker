@@ -1,5 +1,11 @@
 # Meteo Tracker
 
+**v0.3.0:** weather alert types now have English, Italian and French display labels.
+Known technical states change, for example `Wind` → `wind`; the original tag is
+available in `raw_type`. Update any automation comparing the previous state.
+Entity IDs and configuration are preserved. See the
+[upgrade guide](https://github.com/ProtossBlaster/ha-meteo-tracker/blob/v0.3.0/docs/releases/v0.3.0.md).
+
 Per-person weather for Home Assistant, powered by the **OpenWeather One Call API**
 (3.0 or 4.0 — whichever your key can reach; detected at setup).
 
