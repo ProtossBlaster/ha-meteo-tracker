@@ -152,7 +152,26 @@
         "name": "Riepilogo giornaliero"
       },
       "weather_alert_type": {
-        "name": "Tipo di allerta meteo"
+        "name": "Tipo di allerta meteo",
+        "state": {
+          "coastal_event": "Evento costiero",
+          "extreme_low_temperature": "Freddo estremo",
+          "extreme_high_temperature": "Caldo estremo",
+          "wind": "Vento",
+          "flood": "Alluvione",
+          "sand_dust": "Sabbia e polvere",
+          "rain": "Pioggia",
+          "fire_warning": "Allerta incendi",
+          "marine_event": "Evento marino",
+          "avalanches": "Valanghe",
+          "fog": "Nebbia",
+          "air_quality": "Qualità dell’aria",
+          "tornado": "Tornado",
+          "cyclone": "Ciclone",
+          "snow_ice": "Neve e ghiaccio",
+          "thunderstorm": "Temporali",
+          "hail": "Grandine"
+        }
       },
       "sunrise": {
         "name": "Alba"

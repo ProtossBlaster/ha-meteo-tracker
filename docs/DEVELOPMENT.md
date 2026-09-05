@@ -28,7 +28,7 @@ endpoints are fetched and reassembled in `onecall_v4.py`, so no platform knows t
 | `binary_sensor.py` | `BINARY_SENSORS` (weather alert, precipitation expected). |
 | `button.py` | Per-person **Refresh** button → `coordinator.async_request_refresh()`. Adding a platform also means editing `PLATFORMS` in `__init__.py`. |
 | `diagnostics.py` | Config-entry diagnostics; **redacts** api_key + coordinates. |
-| `strings.json` + `translations/{en,it}.json` | UI + entity names + enum state labels. `en.json` is a copy of `strings.json`. |
+| `strings.json` + `translations/{en,it,fr}.json` | UI + entity names + state labels. `en.json` is a copy of `strings.json`. |
 | `brand/` | App icon/logo (256/512). Source for a future `home-assistant/brands` PR. |
 
 ---
@@ -53,6 +53,11 @@ endpoints are fetched and reassembled in `onecall_v4.py`, so no platform knows t
 ---
 
 ## 3. Behaviour reference
+
+- **Alert type:** `weather_codes.alert_type_state` maps 17 known tags to stable
+  slugs, leaving unknown tags verbatim. `alert_tag` supplies the sensor's `raw_type`
+  attribute. Keep this sensor free of a closed ENUM/options list so future tags
+  remain usable. Translate known states in EN/IT/FR; keep full alert text untouched.
 
 - **Location resolution** (`coordinator.resolve_coords`): tracker GPS attrs → home
   zone (state `home`/`casa`) → `zone.<slug>`. No coords ⇒ that person unavailable.

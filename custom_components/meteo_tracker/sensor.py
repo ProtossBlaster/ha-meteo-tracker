@@ -32,6 +32,7 @@ from .entity import MeteoTrackerEntity
 from .weather import _precip
 from .weather_codes import (
     alert_tag,
+    alert_type_state,
     aqi_label,
     compact_summary,
     map_condition,
@@ -85,7 +86,7 @@ def _alert_type(d: dict) -> str | None:
     as a state rather than an attribute, so it can be put on a card and used as
     a trigger without a template (#5).
     """
-    return alert_tag((d.get("onecall") or {}).get("alerts"))
+    return alert_type_state((d.get("onecall") or {}).get("alerts"))
 
 
 def _air_main(d: dict) -> dict:
@@ -456,3 +457,9 @@ class MeteoTrackerSensor(MeteoTrackerEntity, SensorEntity):
             return self.entity_description.value_fn(self._tracker_data)
         except (TypeError, ValueError, IndexError, KeyError, AttributeError):
             return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        if self.entity_description.key == "weather_alert_type":
+            return {"raw_type": alert_tag((self._onecall or {}).get("alerts"))}
+        return None

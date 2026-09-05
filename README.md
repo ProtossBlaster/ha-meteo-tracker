@@ -222,8 +222,16 @@ twice-daily** forecasts.
 - **Weather alert** — `on` when a government alert is active; the alert details
   (event, sender, start/end, description, tags) are in the entity attributes.
   The kind of alert is also a state of its own — see **Weather alert type** above,
-  which carries `tags[0]` verbatim (`Wind`, `Extreme high temperature`, …) so it can
-  go straight on a card or trigger an automation without a template. It reads the
+  which exposes stable technical states (`wind`, `extreme_high_temperature`, …)
+  for 17 known tags, with English, Italian and French display labels following the
+  Home Assistant UI language. Its `raw_type` attribute preserves the OpenWeather
+  tag (`Wind`, `Extreme high temperature`, …). Unknown future tags remain unchanged
+  as both state and `raw_type`; the sensor is deliberately not a closed enum.
+  **Upgrading from 0.2.4:** update any automation or template comparing a known
+  raw state to its lowercase underscore form (for example, `Extreme high temperature`
+  becomes `extreme_high_temperature`), or compare the `raw_type` attribute instead.
+  Entity IDs and unique IDs are unchanged. Full alert text is passed through as
+  supplied by OpenWeather, without translation by this integration. It reads the
   first alert that carries a tag, and is unknown when none is active; when several
   alerts overlap, the binary sensor's `alerts` attribute still lists them all.
   `tags` rather than `event` because on One Call 4.0 `event` arrives empty — measured
