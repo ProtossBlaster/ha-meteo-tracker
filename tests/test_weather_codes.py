@@ -137,6 +137,10 @@ class TestAlertTag:
         assert wc.alert_tag([{"tags": ["   "]}]) is None
         assert wc.alert_tag([{"tags": [""]}, {"tags": ["Flood"]}]) == "Flood"
 
+    def test_unknown_tag_is_returned_verbatim(self):
+        """Future OpenWeather tags must remain usable instead of becoming unknown."""
+        assert wc.alert_tag([{"tags": ["Future experimental hazard"]}]) == "Future experimental hazard"
+
     def test_a_malformed_payload_never_raises(self):
         assert wc.alert_tag([{"tags": "Wind"}]) is None      # string, not a list
         assert wc.alert_tag([None, {"tags": ["Fog"]}]) == "Fog"
