@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import time
 from typing import Any
 from urllib.parse import quote
@@ -33,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 # thing we ask for (48 hours at 20 records a page) needs three requests.
 _MAX_PAGES = 4
 _ALERT_404_BACKOFF = (300, 600, 1200, 1800)  # Seconds
+_ALERT_LOCATION_RADIUS_KM = 2.0  # Ignore small GPS drift for alert 404s
 _ALERT_ABSENCE_TTL = 3600  # Retain failed alerts for one hour after last seen
 
 
@@ -195,11 +197,26 @@ class OpenWeatherClient:
             alerts=await self._alerts_v4(current, location=(round(lat, 4), round(lon, 4))),
         )
 
+    def _alert_cache_location(
+        self, location: tuple[float, float] | None
+    ) -> tuple[float, float] | None:
+        """Reuse the nearest alert backoff cache within 2 km of the GPS fix."""
+        if location is None:
+            return None
+        nearby = (
+            (distance, cached)
+            for cached in self._alert_404_failures
+            if cached is not None
+            if (distance := _distance_km(location, cached)) <= _ALERT_LOCATION_RADIUS_KM
+        )
+        return min(nearby, default=(float("inf"), location))[1]
+
     async def _alerts_v4(
         self, current: Any, *, location: tuple[float, float] | None = None
     ) -> list[dict[str, Any]]:
         """Resolve the alert IDs 4.0 returns into full 3.0-shaped alert entries."""
         ids = onecall_v4.alert_ids(current)
+        location = self._alert_cache_location(location)
         failures_by_id = self._alert_404_failures.setdefault(location, {})
         _LOGGER.debug(
             "Alert backoff diagnostics: client=%x location=%s active_ids=%d "
@@ -319,6 +336,14 @@ async def _reason(resp: Any) -> str:
     if not message:
         return "OpenWeather rejected the API key"
     return str(message)[:300]
+
+
+def _distance_km(a: tuple[float, float], b: tuple[float, float]) -> float:
+    """Great-circle distance in kilometres between two latitude/longitude pairs."""
+    lat1, lon1, lat2, lon2 = map(math.radians, (*a, *b))
+    dlat, dlon = lat2 - lat1, lon2 - lon1
+    hav = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+    return 6371.0 * 2 * math.asin(min(1.0, math.sqrt(hav)))
 
 
 def _or_empty(outcome: Any, what: str) -> list[dict[str, Any]]:
