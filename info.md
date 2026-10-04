@@ -1,5 +1,10 @@
 # Meteo Tracker
 
+**v0.3.1:** on One Call 4.0, a weather alert OpenWeather cannot read (HTTP 404) is
+asked for again after a growing wait, up to hourly, instead of on every refresh: one
+warning instead of one per refresh, and far fewer paid calls. See the
+[release notes](https://github.com/ProtossBlaster/ha-meteo-tracker/blob/v0.3.1/docs/releases/v0.3.1.md).
+
 **v0.3.0:** weather alert types now have English, Italian and French display labels.
 Known technical states change, for example `Wind` → `wind`; the original tag is
 available in `raw_type`. Update any automation comparing the previous state.

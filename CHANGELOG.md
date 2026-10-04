@@ -10,6 +10,10 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-04
+
+Release notes: [v0.3.1](docs/releases/v0.3.1.md).
+
 ### Fixed
 - **One Call 4.0 alert details that answer HTTP 404** (reported in #8, fixed by
   @minimicro34 in #9) are asked for again after 5, 10, 20 and 40 minutes, then
@@ -225,7 +229,7 @@ Initial release. 🎉
 - **Diagnostics** download with the API key and exact coordinates redacted.
 - App **icon** and CI (HACS + hassfest + unit tests).
 
-[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.3.1...HEAD
 [0.1.3]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.3
 [0.1.2]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.2
 [0.1.1]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.1
