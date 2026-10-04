@@ -18,6 +18,25 @@ latest released git tag (`vX.Y.Z`).
 ### Tests
 - Add regression coverage for retries, recovery, alert absence, GPS drift, radius boundaries and independent locations.
 
+## [0.3.0] - 2026-09-05
+
+Upgrade instructions, the complete state mapping and rollback notes:
+[v0.3.0 release guide](docs/releases/v0.3.0.md).
+
+### Changed
+- **Weather alert type states:** the 17 known OpenWeather tags now use stable
+  lowercase underscore keys, allowing EN/IT/FR display translations that pass
+  Hassfest. French labels contributed by @minimicro34 in #7.
+- **Compatibility:** automations/templates comparing the old state must use the
+  new key (`Wind` → `wind`, `Extreme high temperature` → `extreme_high_temperature`)
+  or compare the new `raw_type` attribute, which retains the OpenWeather tag.
+  Existing entity IDs and unique IDs are preserved; no second sensor is added.
+- Unknown future tags keep their original value. No active alert still produces
+  an unknown state with `raw_type: null`. Full alert text remains untouched.
+
+### Fixed
+- Valid state translation keys and synchronized English/source translation files.
+
 ## [0.2.4] - 2026-09-04
 
 ### Added

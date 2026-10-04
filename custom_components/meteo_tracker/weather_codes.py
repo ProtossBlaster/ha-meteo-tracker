@@ -178,6 +178,33 @@ def moon_phase_name(value: float | None) -> str | None:
     return "waning_crescent"
 
 
+ALERT_TYPE_SLUGS = {
+    "Coastal event": "coastal_event",
+    "Extreme low temperature": "extreme_low_temperature",
+    "Extreme high temperature": "extreme_high_temperature",
+    "Wind": "wind",
+    "Flood": "flood",
+    "Sand dust": "sand_dust",
+    "Rain": "rain",
+    "Fire warning": "fire_warning",
+    "Marine event": "marine_event",
+    "Avalanches": "avalanches",
+    "Fog": "fog",
+    "Air quality": "air_quality",
+    "Tornado": "tornado",
+    "Cyclone": "cyclone",
+    "Snow ice": "snow_ice",
+    "Thunderstorm": "thunderstorm",
+    "Hail": "hail",
+}
+
+
+def alert_type_state(alerts: object) -> str | None:
+    """Translate known tags to stable state keys; preserve any future tags."""
+    raw = alert_tag(alerts)
+    return ALERT_TYPE_SLUGS.get(raw, raw)
+
+
 def alert_tag(alerts: object) -> str | None:
     """The kind of weather alert in force: ``tags[0]`` of the first alert carrying one.
 
@@ -188,9 +215,9 @@ def alert_tag(alerts: object) -> str | None:
     identically shaped on both versions and from every service seen so far
     (``["Wind"]``, ``["Extreme high temperature"]``).
 
-    Returned verbatim rather than mapped to a slug: OpenWeather publishes no
-    closed list of tags, so an enum would go ``unknown`` the first time a value
-    outside our list appeared — and we would not learn of it. An alert whose
+    This raw accessor preserves the provider value for the sensor's raw_type
+    attribute. The state accessor maps known tags separately, leaving future
+    tags unchanged rather than restricting them to an enum. An alert whose
     ``tags`` is absent or empty is skipped rather than blanking the state, since
     a second alert may well carry one.
     """

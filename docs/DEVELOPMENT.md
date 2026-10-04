@@ -28,7 +28,7 @@ endpoints are fetched and reassembled in `onecall_v4.py`, so no platform knows t
 | `binary_sensor.py` | `BINARY_SENSORS` (weather alert, precipitation expected). |
 | `button.py` | Per-person **Refresh** button → `coordinator.async_request_refresh()`. Adding a platform also means editing `PLATFORMS` in `__init__.py`. |
 | `diagnostics.py` | Config-entry diagnostics; **redacts** api_key + coordinates. |
-| `strings.json` + `translations/{en,it}.json` | UI + entity names + enum state labels. `en.json` is a copy of `strings.json`. |
+| `strings.json` + `translations/{en,it,fr}.json` | UI + entity names + state labels. `en.json` is a copy of `strings.json`. |
 | `brand/` | App icon/logo (256/512). Source for a future `home-assistant/brands` PR. |
 
 ---
@@ -53,6 +53,11 @@ endpoints are fetched and reassembled in `onecall_v4.py`, so no platform knows t
 ---
 
 ## 3. Behaviour reference
+
+- **Alert type:** `weather_codes.alert_type_state` maps 17 known tags to stable
+  slugs, leaving unknown tags verbatim. `alert_tag` supplies the sensor's `raw_type`
+  attribute. Keep this sensor free of a closed ENUM/options list so future tags
+  remain usable. Translate known states in EN/IT/FR; keep full alert text untouched.
 
 - **Location resolution** (`coordinator.resolve_coords`): tracker GPS attrs → home
   zone (state `home`/`casa`) → `zone.<slug>`. No coords ⇒ that person unavailable.
@@ -80,22 +85,16 @@ endpoints are fetched and reassembled in `onecall_v4.py`, so no platform knows t
 
 ## 4. Validate before every release
 
-Pure-logic tests (no HA needed):
+Pure-logic tests (no HA needed; use an environment with pytest installed):
 ```bash
-python3 - <<'PY'
-import sys, pathlib; sys.path.insert(0, "custom_components/meteo_tracker"); sys.path.insert(0, "tests")
-import test_weather_codes as t
-for c in [getattr(t,n) for n in dir(t) if n.startswith("Test")]:
-    i=c(); [getattr(i,m)() for m in dir(i) if m.startswith("test_")]
-print("pure tests OK")
-PY
+python3 -m pytest tests/ -q
 ```
 
-Import + data-flow against the **real HA image** (catches every device-class / unit /
-API drift):
+Import check against the **real HA image** (catches import-time incompatibilities;
+it does not replace runtime or UI testing):
 ```bash
-docker run --rm -i --entrypoint python -e PYTHONPATH=/pkg \
-  -v "$PWD/custom_components:/pkg" ghcr.io/home-assistant/home-assistant:stable - <<'PY'
+docker run --rm -i --entrypoint python -e PYTHONPATH=/pkg -e PYTHONDONTWRITEBYTECODE=1 \
+  -v "$PWD/custom_components:/pkg:ro" ghcr.io/home-assistant/home-assistant:stable - <<'PY'
 import importlib
 for m in ["meteo_tracker","meteo_tracker.weather","meteo_tracker.sensor",
           "meteo_tracker.binary_sensor","meteo_tracker.config_flow",
@@ -103,9 +102,6 @@ for m in ["meteo_tracker","meteo_tracker.weather","meteo_tracker.sensor",
     importlib.import_module(m); print("OK", m)
 from meteo_tracker.sensor import SENSORS; print("sensors:", len(SENSORS))
 PY
-# clean up root-owned __pycache__ the mount leaves behind:
-docker run --rm --entrypoint sh -v "$PWD/custom_components:/pkg" \
-  ghcr.io/home-assistant/home-assistant:stable -c 'find /pkg -name __pycache__ -prune -exec rm -rf {} +'
 ```
 
 CI runs the same spirit on every push: **HACS + hassfest + pytest**
@@ -117,6 +113,8 @@ CI runs the same spirit on every push: **HACS + hassfest + pytest**
 
 1. Bump `version` in `manifest.json` (SemVer, = the new tag).
 2. Add a dated section to `CHANGELOG.md` and update the version badge in `README.md`.
+   Update `info.md` and add `docs/releases/vX.Y.Z.md` with compatibility, upgrade,
+   validation and rollback notes; use these notes for the GitHub release.
 3. Run the validation in §4 (green).
 4. `git commit` → `git push` (with Silvio's OK).
 5. `gh release create vX.Y.Z --target main --title "…" --notes "…"` (creates the tag;

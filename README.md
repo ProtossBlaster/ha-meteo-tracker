@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-41BDF5.svg" alt="HACS Custom"></a>
   <img src="https://img.shields.io/badge/Home%20Assistant-2024.12%2B-41BDF5.svg" alt="HA min version">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.2.4-blue.svg" alt="Version"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-0.3.0-blue.svg" alt="Version"></a>
   <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License: MIT">
 </p>
 
@@ -18,6 +18,14 @@ weather picture from the **OpenWeather One Call API** — refreshed **every 10 m
 by default (see the call budget below).
 
 > 🇮🇹 *Versione italiana più in basso → [Italiano](#-italiano).*
+
+> **Updating to v0.3.0:** known weather alert states now use stable lowercase keys.
+> See the [release and upgrade guide](docs/releases/v0.3.0.md) for all 17 mappings,
+> automation examples and rollback instructions. Entity IDs and configuration are preserved.
+>
+> **Aggiornamento a v0.3.0:** i tipi di allerta noti usano nuovi valori tecnici
+> minuscoli. La [guida alla release](docs/releases/v0.3.0.md#italiano) spiega come
+> aggiornare eventuali automazioni; entità e configurazione restano invariate.
 
 ---
 
@@ -222,8 +230,16 @@ twice-daily** forecasts.
 - **Weather alert** — `on` when a government alert is active; the alert details
   (event, sender, start/end, description, tags) are in the entity attributes.
   The kind of alert is also a state of its own — see **Weather alert type** above,
-  which carries `tags[0]` verbatim (`Wind`, `Extreme high temperature`, …) so it can
-  go straight on a card or trigger an automation without a template. It reads the
+  which exposes stable technical states (`wind`, `extreme_high_temperature`, …)
+  for 17 known tags, with English, Italian and French display labels following the
+  Home Assistant UI language. Its `raw_type` attribute preserves the OpenWeather
+  tag (`Wind`, `Extreme high temperature`, …). Unknown future tags remain unchanged
+  as both state and `raw_type`; the sensor is deliberately not a closed enum.
+  **Upgrading from 0.2.4:** update any automation or template comparing a known
+  raw state to its lowercase underscore form (for example, `Extreme high temperature`
+  becomes `extreme_high_temperature`), or compare the `raw_type` attribute instead.
+  Entity IDs and unique IDs are unchanged. Full alert text is passed through as
+  supplied by OpenWeather, without translation by this integration. It reads the
   first alert that carries a tag, and is unknown when none is active; when several
   alerts overlap, the binary sensor's `alerts` attribute still lists them all.
   `tags` rather than `event` because on One Call 4.0 `event` arrives empty — measured
