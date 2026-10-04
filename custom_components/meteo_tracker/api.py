@@ -73,7 +73,7 @@ class OpenWeatherClient:
         self._units = units
         self._api_version = api_version
         # Per-client, per-alert transient failures: (attempts, retry_at).
-        self._alert_404_failures: dict[str, tuple[int, float]] = {}
+        self._alert_404_failures: dict[tuple[float, float] | None, dict[str, tuple[int, float]]] = {}
 
     @property
     def api_version(self) -> str:
@@ -189,15 +189,23 @@ class OpenWeatherClient:
             minutely_pages=_or_empty(minutely, "minute-by-minute forecast"),
             hourly_pages=_or_empty(hourly, "hourly forecast"),
             daily_pages=_or_empty(daily, "daily forecast"),
-            alerts=await self._alerts_v4(current),
+            alerts=await self._alerts_v4(current, location=(round(lat, 4), round(lon, 4))),
         )
 
-    async def _alerts_v4(self, current: Any) -> list[dict[str, Any]]:
+    async def _alerts_v4(
+        self, current: Any, *, location: tuple[float, float] | None = None
+    ) -> list[dict[str, Any]]:
         """Resolve the alert IDs 4.0 returns into full 3.0-shaped alert entries."""
         ids = onecall_v4.alert_ids(current)
+        failures_by_id = self._alert_404_failures.setdefault(location, {})
+
+        # Prune against the complete list, before limiting paid detail requests.
+        active_ids = set(ids)
+        for stale in failures_by_id.keys() - active_ids:
+            del failures_by_id[stale]
 
         if not ids:
-            self._alert_404_failures.clear()
+            self._alert_404_failures.pop(location, None)
             return []
 
         if len(ids) > MAX_V4_ALERTS:
@@ -210,17 +218,11 @@ class OpenWeatherClient:
             )
             ids = ids[:MAX_V4_ALERTS]
 
-        # Discard IDs no longer announced by OpenWeather. Their disappearance is
-        # not proof that a previously failed detail request recovered.
-        active_ids = set(ids)
-        for stale in self._alert_404_failures.keys() - active_ids:
-            del self._alert_404_failures[stale]
-
         now = time.monotonic()
         due_ids = [
             aid for aid in ids
-            if aid not in self._alert_404_failures
-            or now >= self._alert_404_failures[aid][1]
+            if aid not in failures_by_id
+            or now >= failures_by_id[aid][1]
         ]
         details = await asyncio.gather(
             *(
@@ -235,9 +237,9 @@ class OpenWeatherClient:
             if isinstance(detail, InvalidApiKey):
                 raise detail
             if isinstance(detail, OpenWeatherHTTPError) and detail.status == 404:
-                failures = self._alert_404_failures.get(aid, (0, 0))[0] + 1
+                failures = failures_by_id.get(aid, (0, 0))[0] + 1
                 delay = _ALERT_404_BACKOFF[min(failures - 1, 3)]
-                self._alert_404_failures[aid] = (failures, time.monotonic() + delay)
+                failures_by_id[aid] = (failures, time.monotonic() + delay)
                 if failures == 1:
                     _LOGGER.warning(
                         "Could not read alert %s (HTTP 404); retry in %d minutes. "
@@ -254,7 +256,7 @@ class OpenWeatherClient:
             if isinstance(detail, BaseException):
                 _LOGGER.warning("Could not read alert %s: %s", aid, detail)
                 continue
-            previous = self._alert_404_failures.pop(aid, None)
+            previous = failures_by_id.pop(aid, None)
             if previous is not None:
                 _LOGGER.info(
                     "Previously unavailable alert %s retrieved after %d "
