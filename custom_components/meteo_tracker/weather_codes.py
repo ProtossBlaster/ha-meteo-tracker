@@ -105,7 +105,7 @@ _COMPASS = (
 )
 
 
-def wind_cardinal(degrees: float | int | None) -> str | None:
+def wind_cardinal(degrees: float | None) -> str | None:
     """Return the 16-point compass label for a wind bearing in degrees."""
     if degrees is None:
         return None
