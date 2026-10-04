@@ -215,3 +215,22 @@ def test_alert_limit_preserves_backoff(caplog):
         )
 
     asyncio.run(run())
+
+
+def test_alert_normalisation_returns_none():
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        client._get = AsyncMock(return_value={})
+
+        with patch(
+            "meteo_tracker.api.onecall_v4.normalise_alert",
+            return_value=None,
+        ):
+            alerts = await client._alerts_v4(
+                {"data": [{"alerts": ["A"]}]}
+            )
+
+        assert alerts == []
+        assert client._get.await_count == 1
+
+    asyncio.run(run())
