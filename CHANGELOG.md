@@ -10,6 +10,14 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+### Fixed
+- Prevent repeated One Call 4.0 alert-detail HTTP 404 warnings and excessive retries (#8): per-alert progressive backoff of 5, 10, 20 and 30 minutes, with only the first failure logged as WARNING, later failures as DEBUG, and recovery as INFO. Manual refresh respects the retry schedule.
+- Reuse alert backoff for tracker GPS drift within 2 km, anchored to the original cached location to avoid chained movement. Distant locations and separate alerts remain independent; live weather coordinates continue updating normally.
+- Retain backoff state for 60 minutes when an alert temporarily disappears from the active list.
+
+### Tests
+- Add regression coverage for retries, recovery, alert absence, GPS drift, radius boundaries and independent locations.
+
 ## [0.2.4] - 2026-09-04
 
 ### Added
