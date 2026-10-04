@@ -99,3 +99,64 @@ def test_non_404_errors_do_not_enter_backoff():
         assert not client._alert_404_failures.get(None)
 
     asyncio.run(run())
+
+
+def test_invalid_api_key_is_propagated():
+    from meteo_tracker.api import InvalidApiKey
+
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        client._get = AsyncMock(side_effect=InvalidApiKey("Invalid key"))
+
+        with pytest.raises(InvalidApiKey):
+            await client._alerts_v4({"data": [{"alerts": ["A"]}]})
+
+        assert not client._alert_404_failures.get(None)
+
+    asyncio.run(run())
+
+
+def test_multiple_successful_alerts():
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        client._get = AsyncMock(
+            side_effect=[
+                {"event": "Wind", "start": 1, "end": 2},
+                {"event": "Rain", "start": 1, "end": 2},
+            ]
+        )
+
+        alerts = await client._alerts_v4(
+            {"data": [{"alerts": ["A", "B"]}]}
+        )
+
+        assert [alert["event"] for alert in alerts] == ["Wind", "Rain"]
+        assert client._get.await_count == 2
+
+    asyncio.run(run())
+
+
+def test_alert_limit_preserves_backoff(caplog):
+    from meteo_tracker.const import MAX_V4_ALERTS
+
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        client._get = AsyncMock(
+            return_value={"event": "Wind", "start": 1, "end": 2}
+        )
+
+        ids = [f"alert-{i}" for i in range(MAX_V4_ALERTS + 1)]
+
+        with caplog.at_level(logging.WARNING):
+            alerts = await client._alerts_v4(
+                {"data": [{"alerts": ids}]}
+            )
+
+        assert len(alerts) == MAX_V4_ALERTS
+        assert client._get.await_count == MAX_V4_ALERTS
+        assert any(
+            "skipping" in record.message
+            for record in caplog.records
+        )
+
+    asyncio.run(run())
