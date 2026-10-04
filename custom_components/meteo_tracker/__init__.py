@@ -19,7 +19,7 @@ from .const import (
     DEFAULT_API_VERSION,
     DEFAULT_LANGUAGE,
     DEFAULT_SCAN_INTERVAL_MINUTES,
-    DOMAIN,
+    DOMAIN as DOMAIN,
     min_interval_for,
 )
 from .coordinator import MeteoTrackerCoordinator
