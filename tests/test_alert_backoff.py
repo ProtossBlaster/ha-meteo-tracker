@@ -41,7 +41,7 @@ def test_404_backoff_and_recovery(caplog):
             assert sum("Could not read alert A (HTTP 404)" in r.message for r in caplog.records) == 1
             assert sum("Alert A still unavailable" in r.message for r in caplog.records) == 3
             assert sum("Previously unavailable alert A retrieved" in r.message for r in caplog.records) == 1
-            assert "A" not in client._alert_404_failures
+            assert "A" not in client._alert_404_failures.get(None, {})
 
 
 
@@ -56,5 +56,46 @@ def test_disappeared_alert_clears_failure_without_recovery_log(caplog):
             await client._alerts_v4({"data": [{"alerts": []}]})
         assert not client._alert_404_failures
         assert not any("retrieved" in r.message for r in caplog.records)
+
+    asyncio.run(run())
+
+
+def test_backoff_is_independent_per_location_and_alert():
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        calls = []
+
+        async def fetch(url, params):
+            aid = url.rsplit("/", 1)[-1]
+            calls.append(aid)
+            if aid == "A":
+                raise OpenWeatherHTTPError(404, "missing")
+            return {"event": "Wind", "start": 1, "end": 2}
+
+        client._get = fetch
+        first = {"data": [{"alerts": ["A", "B"]}]}
+        second = {"data": [{"alerts": ["A"]}]}
+        await client._alerts_v4(first, location=(1.0, 2.0))
+        assert calls == ["A", "B"]
+        await client._alerts_v4(first, location=(1.0, 2.0))
+        assert calls == ["A", "B", "B"]
+        await client._alerts_v4(second, location=(3.0, 4.0))
+        assert calls == ["A", "B", "B", "A"]
+        await client._alerts_v4({"data": [{"alerts": []}]}, location=(3.0, 4.0))
+        assert "A" in client._alert_404_failures[(1.0, 2.0)]
+        assert (3.0, 4.0) not in client._alert_404_failures
+
+    asyncio.run(run())
+
+
+def test_non_404_errors_do_not_enter_backoff():
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        client._get = AsyncMock(side_effect=OpenWeatherHTTPError(500, "server error"))
+        current = {"data": [{"alerts": ["A"]}]}
+        await client._alerts_v4(current)
+        await client._alerts_v4(current)
+        assert client._get.await_count == 2
+        assert not client._alert_404_failures.get(None)
 
     asyncio.run(run())
