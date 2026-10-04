@@ -188,7 +188,7 @@ Initial release. 🎉
 - **Diagnostics** download with the API key and exact coordinates redacted.
 - App **icon** and CI (HACS + hassfest + unit tests).
 
-[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.2.4...HEAD
 [0.1.3]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.3
 [0.1.2]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.2
 [0.1.1]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.1
