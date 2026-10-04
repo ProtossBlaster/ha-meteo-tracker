@@ -201,6 +201,12 @@ class OpenWeatherClient:
         """Resolve the alert IDs 4.0 returns into full 3.0-shaped alert entries."""
         ids = onecall_v4.alert_ids(current)
         failures_by_id = self._alert_404_failures.setdefault(location, {})
+        _LOGGER.debug(
+            "Alert backoff diagnostics: client=%x location=%s active_ids=%d "
+            "cached_failures=%d cached_locations=%d",
+            id(self), location, len(ids), len(failures_by_id),
+            len(self._alert_404_failures),
+        )
 
         # A transiently incomplete current response must not reset 404 backoff.
         # Keep absent IDs for an hour; prune against the complete list before
