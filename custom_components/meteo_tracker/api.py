@@ -33,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 # thing we ask for (48 hours at 20 records a page) needs three requests.
 _MAX_PAGES = 4
 _ALERT_404_BACKOFF = (300, 600, 1200, 1800)  # Seconds
+_ALERT_ABSENCE_TTL = 3600  # Retain failed alerts for one hour after last seen
 
 
 class OpenWeatherError(Exception):
@@ -72,8 +73,10 @@ class OpenWeatherClient:
         self._language = language
         self._units = units
         self._api_version = api_version
-        # Per-client, per-alert transient failures: (attempts, retry_at).
-        self._alert_404_failures: dict[tuple[float, float] | None, dict[str, tuple[int, float]]] = {}
+        # Per-location, per-alert failures: (attempts, retry_at, last_seen).
+        self._alert_404_failures: dict[
+            tuple[float, float] | None, dict[str, tuple[int, float, float]]
+        ] = {}
 
     @property
     def api_version(self) -> str:
@@ -199,13 +202,24 @@ class OpenWeatherClient:
         ids = onecall_v4.alert_ids(current)
         failures_by_id = self._alert_404_failures.setdefault(location, {})
 
-        # Prune against the complete list, before limiting paid detail requests.
+        # A transiently incomplete current response must not reset 404 backoff.
+        # Keep absent IDs for an hour; prune against the complete list before
+        # limiting paid detail requests, so truncated IDs still count as seen.
+        now = time.monotonic()
         active_ids = set(ids)
-        for stale in failures_by_id.keys() - active_ids:
-            del failures_by_id[stale]
+        for aid, (attempts, retry_at, last_seen) in list(failures_by_id.items()):
+            if aid in active_ids:
+                failures_by_id[aid] = (attempts, retry_at, now)
+            elif now - last_seen >= _ALERT_ABSENCE_TTL:
+                del failures_by_id[aid]
+            else:
+                _LOGGER.debug(
+                    "Alert %s absent from current response; retaining 404 backoff", aid
+                )
 
         if not ids:
-            self._alert_404_failures.pop(location, None)
+            if not failures_by_id:
+                self._alert_404_failures.pop(location, None)
             return []
 
         if len(ids) > MAX_V4_ALERTS:
@@ -218,7 +232,6 @@ class OpenWeatherClient:
             )
             ids = ids[:MAX_V4_ALERTS]
 
-        now = time.monotonic()
         due_ids = [
             aid for aid in ids
             if aid not in failures_by_id
@@ -239,7 +252,7 @@ class OpenWeatherClient:
             if isinstance(detail, OpenWeatherHTTPError) and detail.status == 404:
                 failures = failures_by_id.get(aid, (0, 0))[0] + 1
                 delay = _ALERT_404_BACKOFF[min(failures - 1, 3)]
-                failures_by_id[aid] = (failures, time.monotonic() + delay)
+                failures_by_id[aid] = (failures, time.monotonic() + delay, now)
                 if failures == 1:
                     _LOGGER.warning(
                         "Could not read alert %s (HTTP 404); retry in %d minutes. "
