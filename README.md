@@ -250,7 +250,8 @@ twice-daily** forecasts.
 ### Button
 
 - **Refresh** — forces an immediate OpenWeather update without waiting for the
-  refresh interval (always pressable, so it also works as a manual retry).
+  refresh interval. On One Call 4.0, this button respects the alert-detail
+  HTTP 404 retry backoff; it does not force an immediate retry of unavailable alerts.
 
 ---
 
@@ -281,6 +282,13 @@ person's entities become *unavailable* until coordinates are known again.
   keeping every entity and all of its history.
 - **Entities unavailable** → the tracker has no coordinates (see above), or the
   daily call limit was hit. Lower the refresh frequency or check OpenWeather usage.
+- **One Call 4.0 alert details return HTTP 404** → the integration logs the first
+  failure as a warning and asks for that alert again after 5, 10, 20 and 40
+  minutes, then hourly; later failures are logged at DEBUG level, and a successful
+  retry at INFO. Everyone under the same alert shares its wait, and an alert that
+  drops out of the list keeps it until nobody has seen it for an hour. The Refresh
+  button respects the wait. It is held in memory and starts over when Home
+  Assistant restarts.
 - **Diagnostics** → the integration's *Download diagnostics* redacts your API key
   and exact coordinates.
 

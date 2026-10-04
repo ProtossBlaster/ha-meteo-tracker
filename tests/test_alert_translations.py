@@ -1,11 +1,10 @@
 """Alert state compatibility and translation catalogue contract."""
 
 import json
-from pathlib import Path
 import re
+from pathlib import Path
 
 import weather_codes as wc
-
 
 COMPONENT = Path(__file__).resolve().parents[1] / "custom_components/meteo_tracker"
 

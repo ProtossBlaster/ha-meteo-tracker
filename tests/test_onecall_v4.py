@@ -4,6 +4,8 @@ The rest of the integration only ever reads the 3.0 shape, so these tests are
 the contract: if the reassembly drifts, every platform silently loses data.
 """
 
+from typing import ClassVar
+
 import onecall_v4 as v4
 
 
@@ -87,7 +89,7 @@ class TestNormaliseAlert:
 
     # A real Meteoalarm alert, trimmed: description arrives as a per-language
     # list, `event` arrives empty, and `tags` is present despite the guide.
-    live = {
+    live: ClassVar[dict] = {
         "id": "2.49.0.0.380.3.IT...",
         "sender_name": "Italian Air Force National Meteorological Service",
         "event": "",
