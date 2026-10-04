@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from typing import Any
 from urllib.parse import quote
 
@@ -31,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 # Guard against a timeline that never reports itself finished. Even the longest
 # thing we ask for (48 hours at 20 records a page) needs three requests.
 _MAX_PAGES = 4
+_ALERT_404_BACKOFF = (300, 600, 1200, 1800)  # Seconds
 
 
 class OpenWeatherError(Exception):
@@ -43,6 +45,14 @@ class InvalidApiKey(OpenWeatherError):
 
 class RateLimited(OpenWeatherError):
     """The daily/per-minute call budget was exceeded (HTTP 429)."""
+
+
+class OpenWeatherHTTPError(OpenWeatherError):
+    """HTTP error retaining the response status for selective handling."""
+
+    def __init__(self, status: int, body: str) -> None:
+        self.status = status
+        super().__init__(f"OpenWeather returned HTTP {status}: {body[:200]}")
 
 
 class OpenWeatherClient:
@@ -62,6 +72,8 @@ class OpenWeatherClient:
         self._language = language
         self._units = units
         self._api_version = api_version
+        # Per-client, per-alert transient failures: (attempts, retry_at).
+        self._alert_404_failures: dict[str, tuple[int, float]] = {}
 
     @property
     def api_version(self) -> str:
@@ -81,9 +93,7 @@ class OpenWeatherClient:
                         raise RateLimited("OpenWeather call budget exceeded")
                     if resp.status >= 400:
                         body = await resp.text()
-                        raise OpenWeatherError(
-                            f"OpenWeather returned HTTP {resp.status}: {body[:200]}"
-                        )
+                        raise OpenWeatherHTTPError(resp.status, body)
                     return await resp.json()
         except (ClientError, asyncio.TimeoutError) as err:
             raise OpenWeatherError(f"Error talking to OpenWeather: {err}") from err
@@ -197,21 +207,56 @@ class OpenWeatherClient:
             )
             ids = ids[:MAX_V4_ALERTS]
 
+        # Discard IDs no longer announced by OpenWeather. Their disappearance is
+        # not proof that a previously failed detail request recovered.
+        active_ids = set(ids)
+        for stale in self._alert_404_failures.keys() - active_ids:
+            del self._alert_404_failures[stale]
+
+        now = time.monotonic()
+        due_ids = [
+            aid for aid in ids
+            if aid not in self._alert_404_failures
+            or now >= self._alert_404_failures[aid][1]
+        ]
         details = await asyncio.gather(
             *(
                 self._get(f"{ONECALL_V4_BASE}/alert/{quote(aid, safe='')}", {})
-                for aid in ids
+                for aid in due_ids
             ),
             return_exceptions=True,
         )
 
         alerts: list[dict[str, Any]] = []
-        for aid, detail in zip(ids, details):
+        for aid, detail in zip(due_ids, details):
             if isinstance(detail, InvalidApiKey):
                 raise detail
+            if isinstance(detail, OpenWeatherHTTPError) and detail.status == 404:
+                failures = self._alert_404_failures.get(aid, (0, 0))[0] + 1
+                delay = _ALERT_404_BACKOFF[min(failures - 1, 3)]
+                self._alert_404_failures[aid] = (failures, time.monotonic() + delay)
+                if failures == 1:
+                    _LOGGER.warning(
+                        "Could not read alert %s (HTTP 404); retry in %d minutes. "
+                        "Further failures will be logged at DEBUG level",
+                        aid, delay // 60,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Alert %s still unavailable (HTTP 404), attempt %d; "
+                        "retry in %d minutes",
+                        aid, failures, delay // 60,
+                    )
+                continue
             if isinstance(detail, BaseException):
                 _LOGGER.warning("Could not read alert %s: %s", aid, detail)
                 continue
+            previous = self._alert_404_failures.pop(aid, None)
+            if previous is not None:
+                _LOGGER.info(
+                    "Previously unavailable alert %s retrieved after %d "
+                    "failed attempts", aid, previous[0],
+                )
             alert = onecall_v4.normalise_alert(
                 detail, language=self._language
             )
