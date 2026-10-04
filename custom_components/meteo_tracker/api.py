@@ -103,7 +103,14 @@ class OpenWeatherClient:
                         raise OpenWeatherHTTPError(resp.status, body)
                     return await resp.json()
         except (ClientError, asyncio.TimeoutError) as err:
-            raise OpenWeatherError(f"Error talking to OpenWeather: {err}") from err
+            # A timeout carries no text of its own: the log read
+            # "Error talking to OpenWeather: " and nothing after it (#8).
+            reason = str(err) or (
+                f"no answer within {REQUEST_TIMEOUT} s"
+                if isinstance(err, asyncio.TimeoutError)
+                else type(err).__name__
+            )
+            raise OpenWeatherError(f"Error talking to OpenWeather: {reason}") from err
 
     async def async_one_call(self, lat: float, lon: float) -> dict[str, Any]:
         """Fetch current + minutely + hourly + daily + alerts for a location."""

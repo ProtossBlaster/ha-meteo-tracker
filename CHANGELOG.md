@@ -20,6 +20,8 @@ latest released git tag (`vX.Y.Z`).
 - The wait belongs to the alert, not to a place: the detail request carries no
   location, so everyone under the same alert shares it, and an alert missing from
   one response keeps it until nobody has seen it for an hour.
+- A request that times out says so: the log read "Error talking to OpenWeather: "
+  with nothing after it (#8), and now ends "no answer within 30 s".
 
 ### Tests
 - Coverage for the retries, the recovery, an alert dropping out of the list, two
