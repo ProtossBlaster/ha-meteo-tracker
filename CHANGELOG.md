@@ -11,12 +11,20 @@ latest released git tag (`vX.Y.Z`).
 ## [Unreleased]
 
 ### Fixed
-- Prevent repeated One Call 4.0 alert-detail HTTP 404 warnings and excessive retries (#8): per-alert progressive backoff of 5, 10, 20 and 30 minutes, with only the first failure logged as WARNING, later failures as DEBUG, and recovery as INFO. Manual refresh respects the retry schedule.
-- Reuse alert backoff for tracker GPS drift within 2 km, anchored to the original cached location to avoid chained movement. Distant locations and separate alerts remain independent; live weather coordinates continue updating normally.
-- Retain backoff state for 60 minutes when an alert temporarily disappears from the active list.
+- **One Call 4.0 alert details that answer HTTP 404** (reported in #8, fixed by
+  @minimicro34 in #9) are asked for again after 5, 10, 20 and 40 minutes, then
+  hourly, instead of on every refresh. Only the first failure is logged as a
+  WARNING, later ones at DEBUG, a recovery at INFO; the Refresh button respects
+  the wait. Each request is a paid call: five such alerts asked every 10 minutes
+  cost 720 calls a day, hourly 120.
+- The wait belongs to the alert, not to a place: the detail request carries no
+  location, so everyone under the same alert shares it, and an alert missing from
+  one response keeps it until nobody has seen it for an hour.
 
 ### Tests
-- Add regression coverage for retries, recovery, alert absence, GPS drift, radius boundaries and independent locations.
+- Coverage for the retries, the recovery, an alert dropping out of the list, two
+  people under one alert and the hourly wait. CI now installs aiohttp, without
+  which these tests were skipped.
 
 ## [0.3.0] - 2026-09-05
 
@@ -215,7 +223,7 @@ Initial release. 🎉
 - **Diagnostics** download with the API key and exact coordinates redacted.
 - App **icon** and CI (HACS + hassfest + unit tests).
 
-[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.3.0...HEAD
 [0.1.3]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.3
 [0.1.2]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.2
 [0.1.1]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.1
