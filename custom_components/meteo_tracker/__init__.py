@@ -19,9 +19,9 @@ from .const import (
     DEFAULT_API_VERSION,
     DEFAULT_LANGUAGE,
     DEFAULT_SCAN_INTERVAL_MINUTES,
-    DOMAIN as DOMAIN,
     min_interval_for,
 )
+from .const import DOMAIN as DOMAIN
 from .coordinator import MeteoTrackerCoordinator
 
 _LOGGER = logging.getLogger(__name__)
