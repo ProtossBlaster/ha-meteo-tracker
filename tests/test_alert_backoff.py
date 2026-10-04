@@ -234,3 +234,40 @@ def test_alert_normalisation_returns_none():
         assert client._get.await_count == 1
 
     asyncio.run(run())
+
+def test_nearby_gps_drift_reuses_backoff_and_far_location_is_independent(caplog):
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        client._get = AsyncMock(side_effect=OpenWeatherHTTPError(404, "missing"))
+        current = {"data": [{"alerts": ["A"]}]}
+        clock = [0.0]
+        home = (43.6644, 4.0618)
+        drift = (43.6644, 4.0617)
+        far = (43.7000, 4.0618)
+        with (
+            patch("meteo_tracker.api.time.monotonic", side_effect=lambda: clock[0]),
+            caplog.at_level(logging.DEBUG),
+        ):
+            await client._alerts_v4(current, location=home)
+            await client._alerts_v4(current, location=drift)
+            assert client._get.await_count == 1
+            assert len(client._alert_404_failures) == 1
+            clock[0] = 300
+            await client._alerts_v4(current, location=drift)
+            assert client._get.await_count == 2
+            assert client._alert_404_failures[home]["A"][0] == 2
+            await client._alerts_v4(current, location=far)
+            assert client._get.await_count == 3
+            assert client._alert_404_failures[far]["A"][0] == 1
+        assert sum("Could not read alert A (HTTP 404)" in r.message for r in caplog.records) == 2
+
+    asyncio.run(run())
+
+
+def test_nearby_cache_uses_geographic_distance_not_coordinate_rounding():
+    client = OpenWeatherClient(None, "test", api_version="4.0")
+    home = (43.6644, 4.0618)
+    client._alert_404_failures[home] = {}
+    assert client._alert_cache_location((43.675, 4.0618)) == home
+    assert client._alert_cache_location((43.700, 4.0618)) == (43.700, 4.0618)
+    assert client._alert_cache_location(None) is None
