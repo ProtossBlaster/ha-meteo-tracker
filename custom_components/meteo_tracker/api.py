@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import math
 import time
 from typing import Any
 from urllib.parse import quote
@@ -33,9 +32,12 @@ _LOGGER = logging.getLogger(__name__)
 # Guard against a timeline that never reports itself finished. Even the longest
 # thing we ask for (48 hours at 20 records a page) needs three requests.
 _MAX_PAGES = 4
-_ALERT_404_BACKOFF = (300, 600, 1200, 1800)  # Seconds
-_ALERT_LOCATION_RADIUS_KM = 2.0  # Ignore small GPS drift for alert 404s
-_ALERT_ABSENCE_TTL = 3600  # Retain failed alerts for one hour after last seen
+# Waits before asking again for an alert whose details answer HTTP 404: 5, 10,
+# 20, 40 minutes, then hourly. Each request is a paid call: five such alerts
+# asked every 10 minutes cost 720 calls a day, on top of the 864 a 10-minute
+# refresh already makes, against the 1,000 free ones; hourly, they cost 120.
+_ALERT_404_BACKOFF = (300, 600, 1200, 2400, 3600)  # Seconds
+_ALERT_ABSENCE_TTL = 3600  # Forget a failed alert nobody has seen for an hour
 
 
 class OpenWeatherError(Exception):
@@ -75,10 +77,10 @@ class OpenWeatherClient:
         self._language = language
         self._units = units
         self._api_version = api_version
-        # Per-location, per-alert failures: (attempts, retry_at, last_seen).
-        self._alert_404_failures: dict[
-            tuple[float, float] | None, dict[str, tuple[int, float, float]]
-        ] = {}
+        # Alerts whose details answer HTTP 404: (attempts, retry_at, last_seen).
+        # Keyed by alert ID alone: the detail request carries no location, so a
+        # 404 belongs to the alert, and everyone under that alert waits together.
+        self._alert_404_failures: dict[str, tuple[int, float, float]] = {}
 
     @property
     def api_version(self) -> str:
@@ -194,40 +196,19 @@ class OpenWeatherClient:
             minutely_pages=_or_empty(minutely, "minute-by-minute forecast"),
             hourly_pages=_or_empty(hourly, "hourly forecast"),
             daily_pages=_or_empty(daily, "daily forecast"),
-            alerts=await self._alerts_v4(current, location=(round(lat, 4), round(lon, 4))),
+            alerts=await self._alerts_v4(current),
         )
 
-    def _alert_cache_location(
-        self, location: tuple[float, float] | None
-    ) -> tuple[float, float] | None:
-        """Reuse the nearest alert backoff cache within 2 km of the GPS fix."""
-        if location is None:
-            return None
-        nearby = (
-            (distance, cached)
-            for cached in self._alert_404_failures
-            if cached is not None
-            if (distance := _distance_km(location, cached)) <= _ALERT_LOCATION_RADIUS_KM
-        )
-        return min(nearby, default=(float("inf"), location))[1]
-
-    async def _alerts_v4(
-        self, current: Any, *, location: tuple[float, float] | None = None
-    ) -> list[dict[str, Any]]:
+    async def _alerts_v4(self, current: Any) -> list[dict[str, Any]]:
         """Resolve the alert IDs 4.0 returns into full 3.0-shaped alert entries."""
         ids = onecall_v4.alert_ids(current)
-        location = self._alert_cache_location(location)
-        failures_by_id = self._alert_404_failures.setdefault(location, {})
-        _LOGGER.debug(
-            "Alert backoff diagnostics: client=%x location=%s active_ids=%d "
-            "cached_failures=%d cached_locations=%d",
-            id(self), location, len(ids), len(failures_by_id),
-            len(self._alert_404_failures),
-        )
+        failures_by_id = self._alert_404_failures
 
-        # A transiently incomplete current response must not reset 404 backoff.
-        # Keep absent IDs for an hour; prune against the complete list before
-        # limiting paid detail requests, so truncated IDs still count as seen.
+        # An alert missing from one response keeps its wait: a transiently
+        # incomplete response, or another person's place, must not reset it.
+        # Forget it once nobody has seen it for an hour. Pruned against the
+        # complete list before the paid detail requests are limited, so
+        # truncated IDs still count as seen.
         now = time.monotonic()
         active_ids = set(ids)
         for aid, (attempts, retry_at, last_seen) in list(failures_by_id.items()):
@@ -235,14 +216,8 @@ class OpenWeatherClient:
                 failures_by_id[aid] = (attempts, retry_at, now)
             elif now - last_seen >= _ALERT_ABSENCE_TTL:
                 del failures_by_id[aid]
-            else:
-                _LOGGER.debug(
-                    "Alert %s absent from current response; retaining 404 backoff", aid
-                )
 
         if not ids:
-            if not failures_by_id:
-                self._alert_404_failures.pop(location, None)
             return []
 
         if len(ids) > MAX_V4_ALERTS:
@@ -274,7 +249,7 @@ class OpenWeatherClient:
                 raise detail
             if isinstance(detail, OpenWeatherHTTPError) and detail.status == 404:
                 failures = failures_by_id.get(aid, (0, 0))[0] + 1
-                delay = _ALERT_404_BACKOFF[min(failures - 1, 3)]
+                delay = _ALERT_404_BACKOFF[min(failures, len(_ALERT_404_BACKOFF)) - 1]
                 failures_by_id[aid] = (failures, time.monotonic() + delay, now)
                 if failures == 1:
                     _LOGGER.warning(
@@ -336,14 +311,6 @@ async def _reason(resp: Any) -> str:
     if not message:
         return "OpenWeather rejected the API key"
     return str(message)[:300]
-
-
-def _distance_km(a: tuple[float, float], b: tuple[float, float]) -> float:
-    """Great-circle distance in kilometres between two latitude/longitude pairs."""
-    lat1, lon1, lat2, lon2 = map(math.radians, (*a, *b))
-    dlat, dlon = lat2 - lat1, lon2 - lon1
-    hav = math.sin(dlat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
-    return 6371.0 * 2 * math.asin(min(1.0, math.sqrt(hav)))
 
 
 def _or_empty(outcome: Any, what: str) -> list[dict[str, Any]]:
