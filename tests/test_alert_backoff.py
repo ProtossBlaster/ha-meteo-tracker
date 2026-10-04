@@ -271,3 +271,63 @@ def test_nearby_cache_uses_geographic_distance_not_coordinate_rounding():
     assert client._alert_cache_location((43.675, 4.0618)) == home
     assert client._alert_cache_location((43.700, 4.0618)) == (43.700, 4.0618)
     assert client._alert_cache_location(None) is None
+
+
+def test_radius_boundary_inside_and_outside():
+    from meteo_tracker.api import _distance_km
+
+    client = OpenWeatherClient(None, "test", api_version="4.0")
+    anchor = (0.0, 0.0)
+    client._alert_404_failures[anchor] = {}
+    inside = (0.0179, 0.0)
+    outside = (0.0181, 0.0)
+    assert _distance_km(anchor, inside) < 2.0
+    assert _distance_km(anchor, outside) > 2.0
+    assert client._alert_cache_location(inside) == anchor
+    assert client._alert_cache_location(outside) == outside
+
+
+def test_small_steps_do_not_chain_cache_beyond_original_anchor():
+    client = OpenWeatherClient(None, "test", api_version="4.0")
+    anchor = (0.0, 0.0)
+    client._alert_404_failures[anchor] = {"A": (2, 900.0, 0.0)}
+    # Each step is less than 2 km from the previous one, but the last
+    # position is more than 2 km from the original cache anchor.
+    for latitude in (0.006, 0.012):
+        assert client._alert_cache_location((latitude, 0.0)) == anchor
+    beyond_anchor = (0.024, 0.0)
+    assert client._alert_cache_location(beyond_anchor) == beyond_anchor
+    assert len(client._alert_404_failures) == 1
+
+
+def test_absent_alert_ttl_is_preserved_across_gps_drift():
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        client._get = AsyncMock(side_effect=OpenWeatherHTTPError(404, "missing"))
+        home = (43.6644, 4.0618)
+        drift = (43.6644, 4.0617)
+        active = {"data": [{"alerts": ["A"]}]}
+        absent = {"data": [{"alerts": []}]}
+        clock = [0.0]
+        with patch("meteo_tracker.api.time.monotonic", side_effect=lambda: clock[0]):
+            await client._alerts_v4(active, location=home)
+            clock[0] = 3599
+            await client._alerts_v4(absent, location=drift)
+            assert "A" in client._alert_404_failures[home]
+            assert len(client._alert_404_failures) == 1
+            clock[0] = 3600
+            await client._alerts_v4(absent, location=drift)
+            assert not client._alert_404_failures
+            assert client._get.await_count == 1
+
+    asyncio.run(run())
+
+
+def test_nearest_of_multiple_nearby_caches_is_selected():
+    client = OpenWeatherClient(None, "test", api_version="4.0")
+    first = (0.0, 0.0)
+    second = (0.03, 0.0)
+    client._alert_404_failures[first] = {"A": (1, 300.0, 0.0)}
+    client._alert_404_failures[second] = {"A": (3, 1800.0, 0.0)}
+    assert client._alert_cache_location((0.012, 0.0)) == first
+    assert client._alert_cache_location((0.018, 0.0)) == second
