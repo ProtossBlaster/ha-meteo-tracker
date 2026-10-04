@@ -1,9 +1,10 @@
-from typing import ClassVar
 """Unit tests for rebuilding a One Call 3.0 payload out of 4.0 responses.
 
 The rest of the integration only ever reads the 3.0 shape, so these tests are
 the contract: if the reassembly drifts, every platform silently loses data.
 """
+
+from typing import ClassVar
 
 import onecall_v4 as v4
 
