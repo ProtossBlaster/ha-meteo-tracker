@@ -234,7 +234,8 @@ twice-daily** forecasts.
 ### Button
 
 - **Refresh** — forces an immediate OpenWeather update without waiting for the
-  refresh interval. On One Call 4.0, this button respects the alert-detail\n  HTTP 404 retry backoff; it does not force an immediate retry of unavailable alerts.
+  refresh interval. On One Call 4.0, this button respects the alert-detail
+  HTTP 404 retry backoff; it does not force an immediate retry of unavailable alerts.
 
 ---
 
