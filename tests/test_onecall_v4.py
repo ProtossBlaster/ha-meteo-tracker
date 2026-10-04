@@ -1,3 +1,4 @@
+from typing import ClassVar
 """Unit tests for rebuilding a One Call 3.0 payload out of 4.0 responses.
 
 The rest of the integration only ever reads the 3.0 shape, so these tests are
@@ -87,7 +88,7 @@ class TestNormaliseAlert:
 
     # A real Meteoalarm alert, trimmed: description arrives as a per-language
     # list, `event` arrives empty, and `tags` is present despite the guide.
-    live = {
+    live: ClassVar[dict] = {
         "id": "2.49.0.0.380.3.IT...",
         "sender_name": "Italian Air Force National Meteorological Service",
         "event": "",
