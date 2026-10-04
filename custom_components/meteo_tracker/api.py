@@ -195,8 +195,11 @@ class OpenWeatherClient:
     async def _alerts_v4(self, current: Any) -> list[dict[str, Any]]:
         """Resolve the alert IDs 4.0 returns into full 3.0-shaped alert entries."""
         ids = onecall_v4.alert_ids(current)
+
         if not ids:
+            self._alert_404_failures.clear()
             return []
+
         if len(ids) > MAX_V4_ALERTS:
             _LOGGER.warning(
                 "%d weather alerts are active here; fetching the first %d, "
