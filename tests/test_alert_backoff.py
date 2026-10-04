@@ -47,15 +47,70 @@ def test_404_backoff_and_recovery(caplog):
 
     asyncio.run(run())
 
-def test_disappeared_alert_clears_failure_without_recovery_log(caplog):
+def test_transient_disappearance_retains_backoff(caplog):
     async def run():
         client = OpenWeatherClient(None, "test", api_version="4.0")
         client._get = AsyncMock(side_effect=OpenWeatherHTTPError(404, "missing"))
-        with caplog.at_level(logging.INFO):
+        active = {"data": [{"alerts": ["A"]}]}
+        absent = {"data": [{"alerts": []}]}
+        clock = [0.0]
+        with (
+            patch("meteo_tracker.api.time.monotonic", side_effect=lambda: clock[0]),
+            caplog.at_level(logging.DEBUG),
+        ):
+            await client._alerts_v4(active)
+            clock[0] = 600
+            await client._alerts_v4(absent)
+            assert "A" in client._alert_404_failures[None]
+            assert any("absent from current response" in r.message for r in caplog.records)
+            clock[0] = 660
+            await client._alerts_v4(active)
+            assert client._get.await_count == 2
+            assert client._alert_404_failures[None]["A"][0] == 2
+            assert sum("Could not read alert A (HTTP 404)" in r.message for r in caplog.records) == 1
+            assert any("attempt 2; retry in 10 minutes" in r.message for r in caplog.records)
+
+    asyncio.run(run())
+
+
+def test_absent_alert_expires_without_recovery_log(caplog):
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        client._get = AsyncMock(side_effect=OpenWeatherHTTPError(404, "missing"))
+        clock = [0.0]
+        with (
+            patch("meteo_tracker.api.time.monotonic", side_effect=lambda: clock[0]),
+            caplog.at_level(logging.INFO),
+        ):
             await client._alerts_v4({"data": [{"alerts": ["A"]}]})
+            clock[0] = 3599
+            await client._alerts_v4({"data": [{"alerts": []}]})
+            assert "A" in client._alert_404_failures[None]
+            clock[0] = 3600
             await client._alerts_v4({"data": [{"alerts": []}]})
         assert not client._alert_404_failures
         assert not any("retrieved" in r.message for r in caplog.records)
+
+    asyncio.run(run())
+
+
+def test_reappearance_refreshes_absence_expiry():
+    async def run():
+        client = OpenWeatherClient(None, "test", api_version="4.0")
+        client._get = AsyncMock(side_effect=OpenWeatherHTTPError(404, "missing"))
+        clock = [0.0]
+        active = {"data": [{"alerts": ["A"]}]}
+        absent = {"data": [{"alerts": []}]}
+        with patch("meteo_tracker.api.time.monotonic", side_effect=lambda: clock[0]):
+            await client._alerts_v4(active)
+            clock[0] = 3500
+            await client._alerts_v4(active)
+            clock[0] = 3601
+            await client._alerts_v4(absent)
+            assert "A" in client._alert_404_failures[None]
+            clock[0] = 7100
+            await client._alerts_v4(absent)
+            assert not client._alert_404_failures
 
     asyncio.run(run())
 
@@ -83,7 +138,7 @@ def test_backoff_is_independent_per_location_and_alert():
         assert calls == ["A", "B", "B", "A"]
         await client._alerts_v4({"data": [{"alerts": []}]}, location=(3.0, 4.0))
         assert "A" in client._alert_404_failures[(1.0, 2.0)]
-        assert (3.0, 4.0) not in client._alert_404_failures
+        assert "A" in client._alert_404_failures[(3.0, 4.0)]
 
     asyncio.run(run())
 
