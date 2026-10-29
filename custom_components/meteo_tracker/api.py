@@ -81,6 +81,8 @@ class OpenWeatherClient:
         # Keyed by alert ID alone: the detail request carries no location, so a
         # 404 belongs to the alert, and everyone under that alert waits together.
         self._alert_404_failures: dict[str, tuple[int, float, float]] = {}
+        # Consecutive failures per optional One Call 4.0 timeline.
+        self._timeline_failures: dict[str, int] = {}
 
     @property
     def api_version(self) -> str:
@@ -200,9 +202,9 @@ class OpenWeatherClient:
 
         return onecall_v4.build_onecall(
             current,
-            minutely_pages=_or_empty(minutely, "minute-by-minute forecast"),
-            hourly_pages=_or_empty(hourly, "hourly forecast"),
-            daily_pages=_or_empty(daily, "daily forecast"),
+            minutely_pages=self._timeline_or_empty(minutely, "minute-by-minute forecast"),
+            hourly_pages=self._timeline_or_empty(hourly, "hourly forecast"),
+            daily_pages=self._timeline_or_empty(daily, "daily forecast"),
             alerts=await self._alerts_v4(current),
         )
 
@@ -287,6 +289,29 @@ class OpenWeatherClient:
                 alerts.append(alert)
         return alerts
 
+    def _timeline_or_empty(self, outcome: Any, what: str) -> list[dict[str, Any]]:
+        """Log timeline failure transitions without changing partial refreshes."""
+        if isinstance(outcome, BaseException):
+            failures = self._timeline_failures.get(what, 0) + 1
+            self._timeline_failures[what] = failures
+            if failures == 1:
+                _LOGGER.warning(
+                    "One Call 4.0: %s unavailable this cycle: %s", what, outcome
+                )
+            else:
+                _LOGGER.debug(
+                    "One Call 4.0: %s still unavailable (attempt %d): %s",
+                    what, failures, outcome,
+                )
+            return []
+        failures = self._timeline_failures.pop(what, 0)
+        if failures:
+            _LOGGER.info(
+                "One Call 4.0: %s recovered after %d failed attempts",
+                what, failures,
+            )
+        return outcome
+
     # ---------------------------------------------------------------- other --
 
     async def async_air_pollution(self, lat: float, lon: float) -> dict[str, Any]:
@@ -319,13 +344,6 @@ async def _reason(resp: Any) -> str:
         return "OpenWeather rejected the API key"
     return str(message)[:300]
 
-
-def _or_empty(outcome: Any, what: str) -> list[dict[str, Any]]:
-    """Keep a partial refresh alive when one optional timeline failed."""
-    if isinstance(outcome, BaseException):
-        _LOGGER.warning("One Call 4.0: %s unavailable this cycle: %s", what, outcome)
-        return []
-    return outcome
 
 
 async def async_detect_api_version(
