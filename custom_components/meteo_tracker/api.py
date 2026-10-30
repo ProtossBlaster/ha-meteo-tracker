@@ -16,11 +16,11 @@ from urllib.parse import quote
 from aiohttp import ClientError, ClientSession
 
 from . import onecall_v4
-from .const import COORD_PRECISION
 from .const import (
     AIR_POLLUTION_URL,
     API_V3,
     API_V4,
+    COORD_PRECISION,
     DEFAULT_API_VERSION,
     MAX_V4_ALERTS,
     ONECALL_URL,
