@@ -113,7 +113,8 @@ def test_two_locations_do_not_reset_each_others_failures(caplog):
             return {"data": [{"dt": 1, "temp": 21}]}
 
         client._get = AsyncMock(side_effect=recovered)
-        await client.async_one_call(45.0, 5.0)
+        with caplog.at_level(logging.INFO):
+            await client.async_one_call(45.0, 5.0)
         assert sum("daily forecast recovered after 3 failed attempts" in r.message for r in caplog.records) == 1
 
     asyncio.run(run())
