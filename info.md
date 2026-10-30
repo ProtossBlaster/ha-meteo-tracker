@@ -1,5 +1,10 @@
 # Meteo Tracker
 
+**v0.3.2:** on One Call 4.0, a forecast timeline that keeps failing (for example a
+daily forecast timing out) logs one warning, then debug messages, and an info
+message when it recovers, instead of a warning on every refresh. See the
+[release notes](https://github.com/ProtossBlaster/ha-meteo-tracker/blob/v0.3.2/docs/releases/v0.3.2.md).
+
 **v0.3.1:** on One Call 4.0, a weather alert OpenWeather cannot read (HTTP 404) is
 asked for again after a growing wait, up to hourly, instead of on every refresh: one
 warning instead of one per refresh, and far fewer paid calls. See the

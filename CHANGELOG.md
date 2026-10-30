@@ -10,6 +10,21 @@ latest released git tag (`vX.Y.Z`).
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-30
+
+Release notes: [v0.3.2](docs/releases/v0.3.2.md).
+
+### Fixed
+- **One Call 4.0 forecast timelines that keep failing** (reported and fixed by
+  @minimicro34 in #10 and #11): the minute-by-minute, hourly and daily forecasts
+  log their first failure as a WARNING, later consecutive ones at DEBUG with the
+  attempt number, and a recovery at INFO. They used to log a WARNING on every
+  failed refresh. The count belongs to a place and a timeline: one person's
+  failing forecast is not reset by another person's working one.
+
+### Tests
+- Coverage for repeated failures, recovery and two places sharing one client.
+
 ## [0.3.1] - 2026-10-04
 
 Release notes: [v0.3.1](docs/releases/v0.3.1.md).
@@ -229,7 +244,7 @@ Initial release. 🎉
 - **Diagnostics** download with the API key and exact coordinates redacted.
 - App **icon** and CI (HACS + hassfest + unit tests).
 
-[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/ProtossBlaster/ha-meteo-tracker/compare/v0.3.2...HEAD
 [0.1.3]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.3
 [0.1.2]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.2
 [0.1.1]: https://github.com/ProtossBlaster/ha-meteo-tracker/releases/tag/v0.1.1
