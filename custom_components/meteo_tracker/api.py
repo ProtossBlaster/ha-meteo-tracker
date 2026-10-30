@@ -16,6 +16,7 @@ from urllib.parse import quote
 from aiohttp import ClientError, ClientSession
 
 from . import onecall_v4
+from .const import COORD_PRECISION
 from .const import (
     AIR_POLLUTION_URL,
     API_V3,
@@ -82,7 +83,7 @@ class OpenWeatherClient:
         # 404 belongs to the alert, and everyone under that alert waits together.
         self._alert_404_failures: dict[str, tuple[int, float, float]] = {}
         # Consecutive failures per optional One Call 4.0 timeline.
-        self._timeline_failures: dict[str, int] = {}
+        self._timeline_failures: dict[tuple[float, float, str], int] = {}
 
     @property
     def api_version(self) -> str:
@@ -200,11 +201,12 @@ class OpenWeatherClient:
         if isinstance(current, BaseException):
             raise current
 
+        location = (round(lat, COORD_PRECISION), round(lon, COORD_PRECISION))
         return onecall_v4.build_onecall(
             current,
-            minutely_pages=self._timeline_or_empty(minutely, "minute-by-minute forecast"),
-            hourly_pages=self._timeline_or_empty(hourly, "hourly forecast"),
-            daily_pages=self._timeline_or_empty(daily, "daily forecast"),
+            minutely_pages=self._timeline_or_empty(minutely, "minute-by-minute forecast", location),
+            hourly_pages=self._timeline_or_empty(hourly, "hourly forecast", location),
+            daily_pages=self._timeline_or_empty(daily, "daily forecast", location),
             alerts=await self._alerts_v4(current),
         )
 
@@ -289,11 +291,14 @@ class OpenWeatherClient:
                 alerts.append(alert)
         return alerts
 
-    def _timeline_or_empty(self, outcome: Any, what: str) -> list[dict[str, Any]]:
+    def _timeline_or_empty(
+        self, outcome: Any, what: str, location: tuple[float, float]
+    ) -> list[dict[str, Any]]:
         """Log timeline failure transitions without changing partial refreshes."""
+        key = (*location, what)
         if isinstance(outcome, BaseException):
-            failures = self._timeline_failures.get(what, 0) + 1
-            self._timeline_failures[what] = failures
+            failures = self._timeline_failures.get(key, 0) + 1
+            self._timeline_failures[key] = failures
             if failures == 1:
                 _LOGGER.warning(
                     "One Call 4.0: %s unavailable this cycle: %s", what, outcome
@@ -304,7 +309,7 @@ class OpenWeatherClient:
                     what, failures, outcome,
                 )
             return []
-        failures = self._timeline_failures.pop(what, 0)
+        failures = self._timeline_failures.pop(key, 0)
         if failures:
             _LOGGER.info(
                 "One Call 4.0: %s recovered after %d failed attempts",
